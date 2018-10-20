@@ -1,22 +1,32 @@
+use components::*;
+
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
+use specs::{Builder, Join, World};
+
 use std::f32;
 
 /// The entire game window width
-pub const GAME_WIDTH: u32 = 500;
+pub const WINDOW_WIDTH: u32 = 500;
 
 /// The entire game window height
-pub const GAME_HEIGHT: u32 = 600;
+pub const WINDOW_HEIGHT: u32 = 600;
 
 /// How much of the game window width is taken up by the ui
 const SIDEBAR_WIDTH: u32 = 100;
 
+/// The playable game area width
+const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
+
+/// The playable game area height
+const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
+
 // Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
-    (GAME_WIDTH - SIDEBAR_WIDTH) as f32,
+    GAME_WIDTH as f32,
     0.,
     SIDEBAR_WIDTH as f32,
-    GAME_HEIGHT as f32,
+    WINDOW_HEIGHT as f32,
 ];
 
 /// Health bar
@@ -24,6 +34,9 @@ const HEALTHBAR_BG: [f32; 4] = [SIDEBAR_AREA[0] + 27., 47., 46., 206.];
 
 // BG colour of sidebar ui
 const SIDEBAR_COLOUR: (u8, u8, u8) = (0x55, 0x55, 0x55);
+
+// Size of player square
+const PLAYER_SIZE: f32 = 20.;
 
 struct UITexts {
     health_hdr: TextCached,
@@ -35,6 +48,9 @@ struct UITexts {
 pub struct Galaga {
     // UI text items
     ui_texts: UITexts,
+
+    // ECS world
+    world: World,
 }
 
 impl Galaga {
@@ -66,7 +82,17 @@ impl Galaga {
             );
         }
 
-        Ok(Galaga { ui_texts })
+        // Let's setup our ECS
+        let mut world = World::new();
+
+        // Register all our components
+        world.register::<Position>();
+
+        // Create our player entity
+        let pos = Point2::new(GAME_WIDTH as f32 / 2., GAME_HEIGHT as f32 / 2.);
+        world.create_entity().with(Position(pos)).build();
+
+        Ok(Galaga { ui_texts, world })
     }
 
     // Draw the game's UI
@@ -101,6 +127,21 @@ impl Galaga {
 
         Ok(())
     }
+
+    /// Draw all entities w/ Position
+    fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let positions = self.world.read_storage::<Position>();
+
+        for pos in (&positions).join() {
+            // TODO: Not all entities will use PLAYER_SIZE
+            let rect = graphics::Rect::new(pos.0[0], pos.0[1], PLAYER_SIZE, PLAYER_SIZE);
+
+            graphics::set_color(ctx, (0xAA, 0xAA, 0xAA).into())?;
+            graphics::rectangle(ctx, graphics::DrawMode::Fill, rect)?;
+        }
+
+        Ok(())
+    }
 }
 
 /// Implmentation for our game mainloop.
@@ -118,7 +159,8 @@ impl event::EventHandler for Galaga {
         // Draw the UI
         self.draw_ui(ctx)?;
 
-        // Draw all entities w/ Position & Look
+        // Draw all entities w/ Position
+        self.draw_entities(ctx)?;
 
         // Now, actually put everything onto the screen
         graphics::present(ctx);

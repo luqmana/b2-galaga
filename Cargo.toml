@@ -6,6 +6,8 @@ authors = ["Luqman Aden <me@luqman.ca>"]
 
 [dependencies]
 ggez = "0.4"
+specs = "0.12.3"
+specs-derive = "0.2.0"
 
 [dependencies.sdl2]
 version = "0.31.0"
