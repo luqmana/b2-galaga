@@ -1,0 +1,12 @@
+[package]
+name = "b2-galaga"
+description = "Rust port of Bryan's Galaga port."
+version = "0.1.0"
+authors = ["Luqman Aden <me@luqman.ca>"]
+
+[dependencies]
+ggez = "0.4"
+
+[dependencies.sdl2]
+version = "0.31.0"
+features = ["bundled", "static-link"]
