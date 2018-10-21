@@ -23,10 +23,10 @@ pub const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
 /// The playable game area height
 pub const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
 
-// Playable area
+/// Playable area
 pub const GAME_AREA: [f32; 4] = [0., 0., GAME_WIDTH as f32, GAME_HEIGHT as f32];
 
-// Area occupied by sidebar ui
+/// Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
     GAME_WIDTH as f32,
     0.,
@@ -37,7 +37,10 @@ const SIDEBAR_AREA: [f32; 4] = [
 /// Health bar
 const HEALTHBAR_BG: [f32; 4] = [SIDEBAR_AREA[0] + 27., 47., 46., 206.];
 
-// BG colour of sidebar ui
+/// Max player health
+const MAX_PLAYER_HEALTH: f32 = 10.;
+
+/// BG colour of sidebar ui
 const SIDEBAR_COLOUR: (u8, u8, u8) = (0x55, 0x55, 0x55);
 
 struct UITexts {
@@ -60,6 +63,10 @@ pub struct InputState {
 /// How many frames have elapsed
 #[derive(Default)]
 pub struct Frames(pub u64);
+
+/// Player's current health
+#[derive(Default)]
+pub struct PlayerHealth(pub f32);
 
 /// Main game state.
 pub struct Galaga<'a, 'b> {
@@ -129,6 +136,9 @@ impl<'a, 'b> Galaga<'a, 'b> {
         // Also provide frame count as resource
         world.add_resource::<Frames>(Default::default());
 
+        // And player health
+        world.add_resource::<PlayerHealth>(PlayerHealth(MAX_PLAYER_HEALTH));
+
         Ok(Galaga {
             ui_texts,
             world,
@@ -162,9 +172,16 @@ impl<'a, 'b> Galaga<'a, 'b> {
         // Draw all queued text
         TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
 
-        // Draw the health bar
+        // Draw the health bar BG
         graphics::set_color(ctx, graphics::BLACK)?;
         graphics::rectangle(ctx, graphics::DrawMode::Fill, HEALTHBAR_BG.into())?;
+
+        // Draw the health bar
+        let health = self.world.read_resource::<PlayerHealth>();
+        let lvl = 250. - 200. * health.0 / MAX_PLAYER_HEALTH;
+        let health_rect = [HEALTHBAR_BG[0] + 3., lvl, 40., 250. - lvl].into();
+        graphics::set_color(ctx, (0x00, 0xFF, 0x00).into())?;
+        graphics::rectangle(ctx, graphics::DrawMode::Fill, health_rect)?;
 
         Ok(())
     }
