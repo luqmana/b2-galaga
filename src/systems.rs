@@ -2,7 +2,6 @@ use components::*;
 use entities;
 use game;
 
-use ggez::event;
 use specs::*;
 
 /// Updates entities with both a Position and Velocity
@@ -32,37 +31,34 @@ impl<'a> System<'a> for MovementSystem {
     }
 }
 
-/// Update player's velocity in response to input
-pub struct PlayerControlSystem {
-    /// The key that was pressed/released
-    key: event::Keycode,
-    /// If the key is pressed or released
-    down: bool,
-}
-
-impl PlayerControlSystem {
-    pub fn new(key: event::Keycode, down: bool) -> PlayerControlSystem {
-        PlayerControlSystem { key, down }
-    }
-}
+/// Respond to game input and update game state as necessary
+pub struct PlayerControlSystem;
 
 impl<'a> System<'a> for PlayerControlSystem {
-    type SystemData = (ReadStorage<'a, Player>, WriteStorage<'a, Velocity>);
+    type SystemData = (
+        Read<'a, game::InputState>,
+        ReadStorage<'a, Player>,
+        WriteStorage<'a, Velocity>
+    );
 
-    fn run(&mut self, (player, mut vel): Self::SystemData) {
+    fn run(&mut self, (input, player, mut vel): Self::SystemData) {
         for (_, vel) in (&player, &mut vel).join() {
-            match (self.down, self.key) {
-                (true, event::Keycode::W) => vel.y = -4.,
-                (true, event::Keycode::D) => vel.x = 4.,
-                (true, event::Keycode::S) => vel.y = 4.,
-                (true, event::Keycode::A) => vel.x = -4.,
+            // First zero out the player's velocity
+            vel.x = 0.;
+            vel.y = 0.;
 
-                (false, event::Keycode::W) => vel.y = 0.,
-                (false, event::Keycode::D) => vel.x = 0.,
-                (false, event::Keycode::S) => vel.y = 0.,
-                (false, event::Keycode::A) => vel.x = 0.,
-
-                _ => {}
+            // Next read the input state and update velocities
+            if input.up {
+                vel.y -= 4.;
+            }
+            if input.down {
+                vel.y += 4.;
+            }
+            if input.left {
+                vel.x -= 4.;
+            }
+            if input.right {
+                vel.x += 4.;
             }
         }
     }

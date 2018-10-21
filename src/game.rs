@@ -4,7 +4,7 @@ use systems;
 
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
-use specs::{Dispatcher, DispatcherBuilder, Join, RunNow, World};
+use specs::{Dispatcher, DispatcherBuilder, Join, World};
 
 use std::f32;
 
@@ -41,6 +41,16 @@ struct UITexts {
     health_hdr: TextCached,
     score_hdr: TextCached,
     score: TextCached,
+}
+
+/// Represents current state of the input
+/// keys. (i.e. are they currently being pressed)
+#[derive(Default)]
+pub struct InputState {
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
 }
 
 /// Main game state.
@@ -95,8 +105,13 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
         // Register our systems
         let dispatcher = DispatcherBuilder::new()
-            .with(systems::MovementSystem, "movement", &[])
+            .with(systems::PlayerControlSystem, "control", &[])
+            .with(systems::MovementSystem, "movement", &["control"])
             .build();
+
+        // Initialize input state and provide it as resource
+        // to be read by any system
+        world.add_resource::<InputState>(Default::default());
 
         Ok(Galaga {
             ui_texts,
@@ -182,25 +197,37 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
 
     /// Respond to key down event
     fn key_down_event(&mut self, ctx: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
+        let mut input_state = self.world.write_resource::<InputState>();
+
         match key {
             // Quit on Escape
             event::Keycode::Escape => ctx.quit().expect("Failed to exit somehow?"),
 
             // Fire a projectile
-            event::Keycode::Space => entities::create_player_projectile(&mut self.world),
+            //event::Keycode::Space => entities::create_player_projectile(&mut self.world),
+
+            // Update the input state
+            event::Keycode::W => input_state.up = true,
+            event::Keycode::A => input_state.left = true,
+            event::Keycode::S => input_state.down = true,
+            event::Keycode::D => input_state.right = true,
 
             _ => {}
         }
-
-        // Possibly start moving the player entity
-        let mut pcs = systems::PlayerControlSystem::new(key, true);
-        pcs.run_now(&mut self.world.res);
     }
 
     /// Respond to key up event
     fn key_up_event(&mut self, _: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
-        // Possibly stop moving the player entity
-        let mut pcs = systems::PlayerControlSystem::new(key, false);
-        pcs.run_now(&mut self.world.res);
+        let mut input_state = self.world.write_resource::<InputState>();
+
+        match key {
+            // Update the input state
+            event::Keycode::W => input_state.up = false,
+            event::Keycode::A => input_state.left = false,
+            event::Keycode::S => input_state.down = false,
+            event::Keycode::D => input_state.right = false,
+
+            _ => {}
+        }
     }
 }
