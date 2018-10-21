@@ -182,9 +182,14 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
 
     /// Respond to key down event
     fn key_down_event(&mut self, ctx: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
-        // Quit on ESC
-        if key == event::Keycode::Escape {
-            ctx.quit().expect("Failed to exit somehow?");
+        match key {
+            // Quit on Escape
+            event::Keycode::Escape => ctx.quit().expect("Failed to exit somehow?"),
+
+            // Fire a projectile
+            event::Keycode::Space => entities::create_player_projectile(&mut self.world),
+
+            _ => {}
         }
 
         // Possibly start moving the player entity

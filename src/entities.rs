@@ -6,6 +6,11 @@ use specs::*;
 // Size of player square
 pub const PLAYER_SIZE: f32 = 20.;
 
+// Width of player's projectile
+pub const PLAYER_PROJ_WIDTH: f32 = 4.;
+// Height of player's projectile
+pub const PLAYER_PROJ_HEIGHT: f32 = 8.;
+
 /// Creates the player entity and registers it with our world
 pub fn create_player(world: &mut World) {
     // The player has a position and starts out
@@ -36,4 +41,36 @@ pub fn create_player(world: &mut World) {
         .with(vel)
         .with(look)
         .build();
+}
+
+/// Create a projectile entity shot by the player
+pub fn create_player_projectile(world: &mut World) {
+    // Get the player's current position
+    let p_pos = {
+        let player = world.read_storage::<components::Player>();
+        let pos = world.read_storage::<components::Position>();
+
+        match (&player, &pos).join().next() {
+            Some((_, p_pos)) => *p_pos,
+            None => return,
+        }
+    };
+
+    // Set projectile's position based on player's position
+    let pos = components::Position {
+        x: p_pos.x + PLAYER_SIZE / 2. - PLAYER_PROJ_WIDTH / 2.,
+        y: p_pos.y,
+    };
+
+    // Set the projectile's velocity
+    let vel = components::Velocity { x: 0., y: -8. };
+
+    // Set the projectile's look
+    let look = components::Look {
+        width: PLAYER_PROJ_WIDTH,
+        height: PLAYER_PROJ_HEIGHT,
+        colour: (0x00, 0x00, 0xFF),
+    };
+
+    world.create_entity().with(pos).with(vel).with(look).build();
 }
