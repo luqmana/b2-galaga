@@ -19,7 +19,7 @@ impl<'a> System<'a> for BaddySpawner {
 
         // Wavers
         if frame.0 % 300 == 200 {
-            entities::create_waver_baddy(ent.create(), &lazy);
+            entities::create_waver_baddy(ent.create(), None, &lazy);
         }
     }
 }
@@ -29,15 +29,22 @@ pub struct BaddyActions;
 impl<'a> System<'a> for BaddyActions {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Oscillates>,
+        WriteStorage<'a, BaddyAge>,
         ReadStorage<'a, NoobBaddy>,
+        WriteStorage<'a, Oscillates>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, Velocity>,
+        ReadStorage<'a, WaverBaddy>,
         Read<'a, LazyUpdate>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut oscs, noob, pos, mut vel, lazy) = data;
+        let (ent, mut age, noob, mut oscs, pos, mut vel, waver, lazy) = data;
+
+        // Update baddies' ages
+        for age in (&mut age).join() {
+            age.0 += 1;
+        }
 
         // Noob baddies oscillate some number of times in the center 60% of game area
         for (_, e, oscs, pos, vel) in (&noob, &ent, &mut oscs, &pos, &mut vel).join() {
@@ -62,6 +69,19 @@ impl<'a> System<'a> for BaddyActions {
                 if oscs.0 == 0 {
                     lazy.remove::<Oscillates>(e);
                 }
+            }
+        }
+
+        // Waver baddy logic
+        for (waver, age, vel) in (&waver, &age, &mut vel).join() {
+            // If we're not the last waver, summon the rest of our wave
+            if age.0 == 15 && waver.rank > 0 {
+                entities::create_waver_baddy(ent.create(), Some(*waver), &lazy);
+            }
+
+            // Decrease vertical velocity
+            if age.0 % 8 == 0 {
+                vel.y -= 1.;
             }
         }
     }

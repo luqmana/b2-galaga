@@ -111,26 +111,30 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
 }
 
 /// Creates a new `Waver` baddy
-pub fn create_waver_baddy(e: Entity, update: &LazyUpdate) {
+pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, update: &LazyUpdate) {
     let mut rng = rand::thread_rng();
 
     let start_left = rng.gen::<bool>();
 
-    // Choose the Waver's starting position
-    let pos = components::Position {
-        x: if start_left {
-            1. - WAVER_SIZE
-        } else {
-            game::GAME_WIDTH as f32 - 1.
-        },
-        y: rng.gen_range(50u8, 149) as f32,
-    };
-
-    // Waver's velocity
-    let vel = components::Velocity {
-        x: if start_left { 4. } else { -4. },
-        y: 8.,
-    };
+    // Choose the Waver's starting position and velocity
+    // (possibly using the base passed in)
+    let (rank, pos, vel) = base.map(|w| (w.rank - 1, w.pos, w.vel)).unwrap_or_else(|| {
+        (
+            10,
+            components::Position {
+                x: if start_left {
+                    1. - WAVER_SIZE
+                } else {
+                    game::GAME_WIDTH as f32 - 1.
+                },
+                y: rng.gen_range(50u8, 149) as f32,
+            },
+            components::Velocity {
+                x: if start_left { 4. } else { -4. },
+                y: 8.,
+            },
+        )
+    });
 
     // Set the Waver's size and colour
     let rendered = components::Rendered {
@@ -138,7 +142,15 @@ pub fn create_waver_baddy(e: Entity, update: &LazyUpdate) {
         colour: (0xFF, 0x00, 0xFF),
     };
 
+    // Set Waver's age
+    let age = components::BaddyAge(0);
+
+    // Mark it as a Waver
+    let waver = components::WaverBaddy { rank, pos, vel };
+
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
+    update.insert(e, age);
+    update.insert(e, waver);
 }

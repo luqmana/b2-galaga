@@ -24,12 +24,7 @@ pub const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
 pub const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
 
 // Playable area
-pub const GAME_AREA: [f32; 4] = [
-    0.,
-    0.,
-    GAME_WIDTH as f32,
-    GAME_HEIGHT as f32
-];
+pub const GAME_AREA: [f32; 4] = [0., 0., GAME_WIDTH as f32, GAME_HEIGHT as f32];
 
 // Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
@@ -121,8 +116,11 @@ impl<'a, 'b> Galaga<'a, 'b> {
             .with(systems::BaddySpawner, "baddy_spawner", &[])
             .with(systems::BaddyActions, "baddy_actions", &[])
             .with(systems::PlayerControlSystem::new(), "control", &[])
-            .with(systems::MovementSystem, "movement", &["baddy_actions", "control"])
-            .build();
+            .with(
+                systems::MovementSystem,
+                "movement",
+                &["baddy_actions", "control"],
+            ).build();
 
         // Initialize input state and provide it as resource
         // to be read by any system
