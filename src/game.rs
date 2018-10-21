@@ -165,11 +165,12 @@ impl<'a, 'b> Galaga<'a, 'b> {
     /// Draw all entities w/ Position
     fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
         let position = self.world.read_storage::<Position>();
-        let look = self.world.read_storage::<Look>();
+        let rendered = self.world.read_storage::<Rendered>();
 
-        for (pos, look) in (&position, &look).join() {
-            let rect = graphics::Rect::new(pos.x, pos.y, look.width, look.height);
-            graphics::set_color(ctx, look.colour.into())?;
+        for (pos, rendered) in (&position, &rendered).join() {
+            let mut rect = rendered.area;
+            rect.move_to([pos.x, pos.y].into());
+            graphics::set_color(ctx, rendered.colour.into())?;
             graphics::rectangle(ctx, graphics::DrawMode::Fill, rect)?;
         }
 

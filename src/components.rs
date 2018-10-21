@@ -1,22 +1,14 @@
+use ggez::graphics;
 use specs::*;
 
 /// Registers all our components with Specs.
 /// Make sure to modify this if any components
 /// are added or removed.
 pub fn register_components(world: &mut World) {
-    world.register::<Look>();
     world.register::<Player>();
     world.register::<Position>();
+    world.register::<Rendered>();
     world.register::<Velocity>();
-}
-
-/// Marks visible entities with an area and colour
-#[derive(Component)]
-#[storage(VecStorage)]
-pub struct Look {
-    pub width: f32,
-    pub height: f32,
-    pub colour: (u8, u8, u8),
 }
 
 /// Marks the player entity so we can control it.
@@ -30,6 +22,14 @@ pub struct Player;
 pub struct Position {
     pub x: f32,
     pub y: f32,
+}
+
+/// Marks entities that are to be rendered onscreen
+#[derive(Component)]
+#[storage(VecStorage)]
+pub struct Rendered {
+    pub area: graphics::Rect,
+    pub colour: (u8, u8, u8),
 }
 
 /// Marks entities with a velocity

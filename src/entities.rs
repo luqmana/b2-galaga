@@ -32,9 +32,8 @@ pub fn create_player(world: &mut World) {
     let player = components::Player;
 
     // The player is also visible on screen
-    let look = components::Look {
-        width: PLAYER_SIZE,
-        height: PLAYER_SIZE,
+    let rendered = components::Rendered {
+        area: [0., 0., PLAYER_SIZE, PLAYER_SIZE].into(),
         colour: (0xAA, 0xAA, 0xAA),
     };
 
@@ -43,7 +42,7 @@ pub fn create_player(world: &mut World) {
         .with(player)
         .with(pos)
         .with(vel)
-        .with(look)
+        .with(rendered)
         .build();
 }
 
@@ -58,16 +57,15 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
     // Set the projectile's velocity
     let vel = components::Velocity { x: 0., y: -8. };
 
-    // Set the projectile's look
-    let look = components::Look {
-        width: PLAYER_PROJ_WIDTH,
-        height: PLAYER_PROJ_HEIGHT,
+    // Set the projectile's size and colour
+    let rendered = components::Rendered {
+        area: [0., 0., PLAYER_PROJ_WIDTH, PLAYER_PROJ_HEIGHT].into(),
         colour: (0x00, 0x00, 0xFF),
     };
 
     update.insert(e, pos);
     update.insert(e, vel);
-    update.insert(e, look);
+    update.insert(e, rendered);
 }
 
 /// Creates a new `Noob` baddy
@@ -90,14 +88,13 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
         y: 0.,
     };
 
-    // Set the noob's look
-    let look = components::Look {
-        width: NOOB_SIZE,
-        height: NOOB_SIZE,
+    // Set the noob's size and colour
+    let rendered = components::Rendered {
+        area: [0., 0., NOOB_SIZE, NOOB_SIZE].into(),
         colour: (0xDD, 0x66, 0x33),
     };
 
     update.insert(e, pos);
     update.insert(e, vel);
-    update.insert(e, look);
+    update.insert(e, rendered);
 }

@@ -13,3 +13,7 @@ specs-derive = "0.2.0"
 [dependencies.sdl2]
 version = "0.31.0"
 features = ["bundled", "static-link"]
+
+[patch.crates-io]
+# Temp override to upgrade nalgebra version
+ggez = { path = "../ggez" }
