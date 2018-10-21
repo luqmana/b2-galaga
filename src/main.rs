@@ -1,4 +1,5 @@
 extern crate ggez;
+extern crate rand;
 extern crate specs;
 #[macro_use]
 extern crate specs_derive;

@@ -1,10 +1,14 @@
 use components;
 use game;
 
+use rand::{self, Rng};
 use specs::*;
 
 // Size of player square
 pub const PLAYER_SIZE: f32 = 20.;
+
+// Size of Noob baddy square
+pub const NOOB_SIZE: f32 = 20.;
 
 // Width of player's projectile
 pub const PLAYER_PROJ_WIDTH: f32 = 4.;
@@ -59,6 +63,38 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
         width: PLAYER_PROJ_WIDTH,
         height: PLAYER_PROJ_HEIGHT,
         colour: (0x00, 0x00, 0xFF),
+    };
+
+    update.insert(e, pos);
+    update.insert(e, vel);
+    update.insert(e, look);
+}
+
+/// Creates a new `Noob` baddy
+pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
+    let mut rng = rand::thread_rng();
+
+    // Choose the Noob's starting position
+    let pos = components::Position {
+        x: if rng.gen::<bool>() {
+            1. - NOOB_SIZE
+        } else {
+            game::GAME_WIDTH as f32 - 1.
+        },
+        y: rng.gen_range(0., 300.),
+    };
+
+    // Noobs only move side to side
+    let vel = components::Velocity {
+        x: rng.gen_range(1u8, 4u8) as f32,
+        y: 0.,
+    };
+
+    // Set the noob's look
+    let look = components::Look {
+        width: NOOB_SIZE,
+        height: NOOB_SIZE,
+        colour: (0xDD, 0x66, 0x33),
     };
 
     update.insert(e, pos);

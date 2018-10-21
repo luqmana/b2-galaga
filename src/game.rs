@@ -110,6 +110,7 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
         // Register our systems
         let dispatcher = DispatcherBuilder::new()
+            .with(systems::BaddySpawner, "baddy_spawner", &[])
             .with(systems::PlayerControlSystem::new(), "control", &[])
             .with(systems::MovementSystem, "movement", &["control"])
             .build();
@@ -194,11 +195,11 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         // Clear the old screen
         graphics::clear(ctx);
 
-        // Draw the UI
-        self.draw_ui(ctx)?;
-
         // Draw all entities w/ Position
         self.draw_entities(ctx)?;
+
+        // Draw the UI
+        self.draw_ui(ctx)?;
 
         // Now, actually put everything onto the screen
         graphics::present(ctx);

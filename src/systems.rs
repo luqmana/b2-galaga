@@ -4,6 +4,21 @@ use game;
 
 use specs::*;
 
+pub struct BaddySpawner;
+
+impl<'a> System<'a> for BaddySpawner {
+    type SystemData = (Entities<'a>, Read<'a, LazyUpdate>, Read<'a, game::Frames>);
+
+    fn run(&mut self, (ent, lazy, frame): Self::SystemData) {
+        // Spawn some baddies every so often
+
+        // Noobs
+        if frame.0 % 100 == 50 {
+            entities::create_noob_baddy(ent.create(), &lazy);
+        }
+    }
+}
+
 /// Updates entities with both a Position and Velocity
 pub struct MovementSystem;
 
@@ -39,9 +54,7 @@ pub struct PlayerControlSystem {
 
 impl PlayerControlSystem {
     pub fn new() -> PlayerControlSystem {
-        PlayerControlSystem {
-            last_shot_frame: 0,
-        }
+        PlayerControlSystem { last_shot_frame: 0 }
     }
 }
 
