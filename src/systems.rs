@@ -52,15 +52,15 @@ impl<'a> System<'a> for PlayerControlSystem {
     fn run(&mut self, (player, mut vel): Self::SystemData) {
         for (_, vel) in (&player, &mut vel).join() {
             match (self.down, self.key) {
-                (true, event::Keycode::Up) => vel.y = -4.,
-                (true, event::Keycode::Right) => vel.x = 4.,
-                (true, event::Keycode::Down) => vel.y = 4.,
-                (true, event::Keycode::Left) => vel.x = -4.,
+                (true, event::Keycode::W) => vel.y = -4.,
+                (true, event::Keycode::D) => vel.x = 4.,
+                (true, event::Keycode::S) => vel.y = 4.,
+                (true, event::Keycode::A) => vel.x = -4.,
 
-                (false, event::Keycode::Up) => vel.y = 0.,
-                (false, event::Keycode::Right) => vel.x = 0.,
-                (false, event::Keycode::Down) => vel.y = 0.,
-                (false, event::Keycode::Left) => vel.x = 0.,
+                (false, event::Keycode::W) => vel.y = 0.,
+                (false, event::Keycode::D) => vel.x = 0.,
+                (false, event::Keycode::S) => vel.y = 0.,
+                (false, event::Keycode::A) => vel.x = 0.,
 
                 _ => {}
             }
