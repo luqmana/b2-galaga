@@ -11,6 +11,9 @@ mod components;
 /// The various entities in the game
 mod entities;
 
+/// The systems that can act on our entities
+mod systems;
+
 /// Main game state structure and game loop
 mod game;
 

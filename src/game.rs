@@ -1,9 +1,10 @@
 use components::{self, *};
 use entities;
+use systems;
 
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
-use specs::{Join, World};
+use specs::{Dispatcher, DispatcherBuilder, Join, World};
 
 use std::f32;
 
@@ -46,17 +47,20 @@ struct UITexts {
 }
 
 /// Main game state.
-pub struct Galaga {
+pub struct Galaga<'a, 'b> {
     // UI text items
     ui_texts: UITexts,
 
     // ECS world
     world: World,
+
+    // Runs our various systems
+    dispatcher: Dispatcher<'a, 'b>
 }
 
-impl Galaga {
+impl<'a, 'b> Galaga<'a, 'b> {
     /// Create new instance of our game state
-    pub fn new(ctx: &mut Context) -> GameResult<Galaga> {
+    pub fn new(ctx: &mut Context) -> GameResult<Galaga<'a, 'b>> {
         // Let's set the background colour to black
         graphics::set_background_color(ctx, graphics::BLACK);
 
@@ -92,7 +96,12 @@ impl Galaga {
         // Create our player entity
         entities::create_player(&mut world);
 
-        Ok(Galaga { ui_texts, world })
+        // Register our systems
+        let dispatcher = DispatcherBuilder::new()
+            .with(systems::MovementSystem, "movement", &[])
+            .build();
+
+        Ok(Galaga { ui_texts, world, dispatcher })
     }
 
     // Draw the game's UI
@@ -145,9 +154,12 @@ impl Galaga {
 }
 
 /// Implmentation for our game mainloop.
-impl event::EventHandler for Galaga {
+impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
     /// Called on every tick; where we handle the game logic.
     fn update(&mut self, _: &mut Context) -> GameResult<()> {
+        // Run the systems!
+        self.dispatcher.dispatch(&self.world.res);
+
         Ok(())
     }
 
