@@ -54,6 +54,10 @@ pub struct InputState {
     pub shoot: bool,
 }
 
+/// How many frames have elapsed
+#[derive(Default)]
+pub struct Frames(pub u64);
+
 /// Main game state.
 pub struct Galaga<'a, 'b> {
     // UI text items
@@ -106,13 +110,16 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
         // Register our systems
         let dispatcher = DispatcherBuilder::new()
-            .with(systems::PlayerControlSystem, "control", &[])
+            .with(systems::PlayerControlSystem::new(), "control", &[])
             .with(systems::MovementSystem, "movement", &["control"])
             .build();
 
         // Initialize input state and provide it as resource
         // to be read by any system
         world.add_resource::<InputState>(Default::default());
+
+        // Also provide frame count as resource
+        world.add_resource::<Frames>(Default::default());
 
         Ok(Galaga {
             ui_texts,
@@ -195,6 +202,10 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
 
         // Now, actually put everything onto the screen
         graphics::present(ctx);
+
+        // Update frame count
+        let mut frames = self.world.write_resource::<Frames>();
+        frames.0 += 1;
 
         Ok(())
     }

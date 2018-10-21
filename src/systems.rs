@@ -32,12 +32,24 @@ impl<'a> System<'a> for MovementSystem {
 }
 
 /// Respond to game input and update game state as necessary
-pub struct PlayerControlSystem;
+pub struct PlayerControlSystem {
+    // What was the last frame where we shot a projectile
+    last_shot_frame: u64,
+}
+
+impl PlayerControlSystem {
+    pub fn new() -> PlayerControlSystem {
+        PlayerControlSystem {
+            last_shot_frame: 0,
+        }
+    }
+}
 
 impl<'a> System<'a> for PlayerControlSystem {
     type SystemData = (
         Entities<'a>,
         Read<'a, LazyUpdate>,
+        Read<'a, game::Frames>,
         Read<'a, game::InputState>,
         ReadStorage<'a, Player>,
         ReadStorage<'a, Position>,
@@ -45,7 +57,7 @@ impl<'a> System<'a> for PlayerControlSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, lazy, input, player, pos, mut vel) = data;
+        let (ent, lazy, frame, input, player, pos, mut vel) = data;
 
         for (_, pos, vel) in (&player, &pos, &mut vel).join() {
             // First zero out the player's velocity
@@ -67,9 +79,12 @@ impl<'a> System<'a> for PlayerControlSystem {
             }
 
             // Are we shooting projectiles?
-            if input.shoot {
+            if input.shoot && frame.0 - self.last_shot_frame >= 10 {
                 let e = ent.create();
                 entities::create_player_projectile(e, *pos, &lazy);
+
+                // Update frame reference
+                self.last_shot_frame = frame.0;
             }
         }
     }
