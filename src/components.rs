@@ -4,9 +4,19 @@ use specs::*;
 /// Make sure to modify this if any components
 /// are added or removed.
 pub fn register_components(world: &mut World) {
+    world.register::<Look>();
     world.register::<Player>();
     world.register::<Position>();
     world.register::<Velocity>();
+}
+
+/// Marks visible entities with an area and colour
+#[derive(Component)]
+#[storage(VecStorage)]
+pub struct Look {
+    pub width: f32,
+    pub height: f32,
+    pub colour: (u8, u8, u8),
 }
 
 /// Marks the player entity so we can control it.

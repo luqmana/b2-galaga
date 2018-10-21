@@ -3,6 +3,9 @@ use game;
 
 use specs::*;
 
+// Size of player square
+const PLAYER_SIZE: f32 = 20.;
+
 /// Creates the player entity and registers it with our world
 pub fn create_player(world: &mut World) {
     // The player has a position and starts out
@@ -19,10 +22,18 @@ pub fn create_player(world: &mut World) {
     // we can control it
     let player = components::Player;
 
+    // The player is also visible on screen
+    let look = components::Look {
+        width: PLAYER_SIZE,
+        height: PLAYER_SIZE,
+        colour: (0xAA, 0xAA, 0xAA),
+    };
+
     world
         .create_entity()
         .with(player)
         .with(pos)
         .with(vel)
+        .with(look)
         .build();
 }

@@ -37,9 +37,6 @@ const HEALTHBAR_BG: [f32; 4] = [SIDEBAR_AREA[0] + 27., 47., 46., 206.];
 // BG colour of sidebar ui
 const SIDEBAR_COLOUR: (u8, u8, u8) = (0x55, 0x55, 0x55);
 
-// Size of player square
-const PLAYER_SIZE: f32 = 20.;
-
 struct UITexts {
     health_hdr: TextCached,
     score_hdr: TextCached,
@@ -143,13 +140,12 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
     /// Draw all entities w/ Position
     fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let positions = self.world.read_storage::<Position>();
+        let position = self.world.read_storage::<Position>();
+        let look = self.world.read_storage::<Look>();
 
-        for pos in (&positions).join() {
-            // TODO: Not all entities will use PLAYER_SIZE
-            let rect = graphics::Rect::new(pos.x, pos.y, PLAYER_SIZE, PLAYER_SIZE);
-
-            graphics::set_color(ctx, (0xAA, 0xAA, 0xAA).into())?;
+        for (pos, look) in (&position, &look).join() {
+            let rect = graphics::Rect::new(pos.x, pos.y, look.width, look.height);
+            graphics::set_color(ctx, look.colour.into())?;
             graphics::rectangle(ctx, graphics::DrawMode::Fill, rect)?;
         }
 
