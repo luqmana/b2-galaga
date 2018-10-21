@@ -119,8 +119,9 @@ impl<'a, 'b> Galaga<'a, 'b> {
         // Register our systems
         let dispatcher = DispatcherBuilder::new()
             .with(systems::BaddySpawner, "baddy_spawner", &[])
+            .with(systems::BaddyActions, "baddy_actions", &[])
             .with(systems::PlayerControlSystem::new(), "control", &[])
-            .with(systems::MovementSystem, "movement", &["control"])
+            .with(systems::MovementSystem, "movement", &["baddy_actions", "control"])
             .build();
 
         // Initialize input state and provide it as resource

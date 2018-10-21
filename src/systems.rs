@@ -19,6 +19,49 @@ impl<'a> System<'a> for BaddySpawner {
     }
 }
 
+pub struct BaddyActions;
+
+impl<'a> System<'a> for BaddyActions {
+    type SystemData = (
+        Entities<'a>,
+        WriteStorage<'a, Oscillates>,
+        ReadStorage<'a, NoobBaddy>,
+        ReadStorage<'a, Position>,
+        WriteStorage<'a, Velocity>,
+        Read<'a, LazyUpdate>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (ent, mut oscs, noob, pos, mut vel, lazy) = data;
+
+        // Noob baddies oscillate some number of times in the center 60% of game area
+        for (_, e, oscs, pos, vel) in (&noob, &ent, &mut oscs, &pos, &mut vel).join() {
+            let xpct = pos.x / game::GAME_WIDTH as f32;
+            let dir = vel.x.is_sign_positive();
+
+            // Swap directions
+            if xpct < 0.2 {
+                vel.x = vel.x.abs();
+            }
+            if xpct > 0.8 {
+                vel.x = -1.0 * vel.x.abs();
+            }
+
+            // Update oscillation count if we swapped directions
+            if dir != vel.x.is_sign_positive() {
+                // Decrement oscillation count
+                oscs.0 -= 1;
+
+                // If that was the last oscillation, remove that
+                // component from this Noob baddy
+                if oscs.0 == 0 {
+                    lazy.remove::<Oscillates>(e);
+                }
+            }
+        }
+    }
+}
+
 /// Updates entities with both a Position and Velocity
 pub struct MovementSystem;
 

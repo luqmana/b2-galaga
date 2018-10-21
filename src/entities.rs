@@ -72,6 +72,9 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
 pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     let mut rng = rand::thread_rng();
 
+    // Mark it as a Noob
+    let noob = components::NoobBaddy;
+
     // Choose the Noob's starting position
     let pos = components::Position {
         x: if rng.gen::<bool>() {
@@ -94,7 +97,12 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
         colour: (0xDD, 0x66, 0x33),
     };
 
+    // Set how many times it oscillates
+    let oscs = components::Oscillates(rng.gen_range(1, 4));
+
+    update.insert(e, noob);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
+    update.insert(e, oscs);
 }
