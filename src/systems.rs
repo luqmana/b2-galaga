@@ -16,6 +16,11 @@ impl<'a> System<'a> for BaddySpawner {
         if frame.0 % 100 == 50 {
             entities::create_noob_baddy(ent.create(), &lazy);
         }
+
+        // Wavers
+        if frame.0 % 300 == 200 {
+            entities::create_waver_baddy(ent.create(), &lazy);
+        }
     }
 }
 

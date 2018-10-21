@@ -10,6 +10,9 @@ pub const PLAYER_SIZE: f32 = 20.;
 // Size of Noob baddy square
 pub const NOOB_SIZE: f32 = 20.;
 
+// Size of Wave baddy square
+pub const WAVER_SIZE: f32 = 10.;
+
 // Width of player's projectile
 pub const PLAYER_PROJ_WIDTH: f32 = 4.;
 // Height of player's projectile
@@ -87,7 +90,7 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
 
     // Noobs only move side to side
     let vel = components::Velocity {
-        x: rng.gen_range(1u8, 4u8) as f32,
+        x: rng.gen_range(1u8, 4) as f32,
         y: 0.,
     };
 
@@ -105,4 +108,37 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     update.insert(e, vel);
     update.insert(e, rendered);
     update.insert(e, oscs);
+}
+
+/// Creates a new `Waver` baddy
+pub fn create_waver_baddy(e: Entity, update: &LazyUpdate) {
+    let mut rng = rand::thread_rng();
+
+    let start_left = rng.gen::<bool>();
+
+    // Choose the Waver's starting position
+    let pos = components::Position {
+        x: if start_left {
+            1. - WAVER_SIZE
+        } else {
+            game::GAME_WIDTH as f32 - 1.
+        },
+        y: rng.gen_range(50u8, 149) as f32,
+    };
+
+    // Waver's velocity
+    let vel = components::Velocity {
+        x: if start_left { 4. } else { -4. },
+        y: 8.,
+    };
+
+    // Set the Waver's size and colour
+    let rendered = components::Rendered {
+        area: [pos.x, pos.y, WAVER_SIZE, WAVER_SIZE].into(),
+        colour: (0xFF, 0x00, 0xFF),
+    };
+
+    update.insert(e, pos);
+    update.insert(e, vel);
+    update.insert(e, rendered);
 }
