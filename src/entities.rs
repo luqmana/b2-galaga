@@ -44,22 +44,11 @@ pub fn create_player(world: &mut World) {
 }
 
 /// Create a projectile entity shot by the player
-pub fn create_player_projectile(world: &mut World) {
-    // Get the player's current position
-    let p_pos = {
-        let player = world.read_storage::<components::Player>();
-        let pos = world.read_storage::<components::Position>();
-
-        match (&player, &pos).join().next() {
-            Some((_, p_pos)) => *p_pos,
-            None => return,
-        }
-    };
-
+pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: &LazyUpdate) {
     // Set projectile's position based on player's position
     let pos = components::Position {
         x: p_pos.x + PLAYER_SIZE / 2. - PLAYER_PROJ_WIDTH / 2.,
-        y: p_pos.y,
+        y: p_pos.y - PLAYER_PROJ_HEIGHT,
     };
 
     // Set the projectile's velocity
@@ -72,5 +61,7 @@ pub fn create_player_projectile(world: &mut World) {
         colour: (0x00, 0x00, 0xFF),
     };
 
-    world.create_entity().with(pos).with(vel).with(look).build();
+    update.insert(e, pos);
+    update.insert(e, vel);
+    update.insert(e, look);
 }

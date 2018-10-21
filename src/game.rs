@@ -51,6 +51,7 @@ pub struct InputState {
     pub down: bool,
     pub left: bool,
     pub right: bool,
+    pub shoot: bool,
 }
 
 /// Main game state.
@@ -175,6 +176,9 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         // Run the systems!
         self.dispatcher.dispatch(&self.world.res);
 
+        // Let any changes get reflected
+        self.world.maintain();
+
         Ok(())
     }
 
@@ -204,9 +208,9 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
             event::Keycode::Escape => ctx.quit().expect("Failed to exit somehow?"),
 
             // Fire a projectile
-            //event::Keycode::Space => entities::create_player_projectile(&mut self.world),
+            event::Keycode::Space => input_state.shoot = true,
 
-            // Update the input state
+            // Move in some direction
             event::Keycode::W => input_state.up = true,
             event::Keycode::A => input_state.left = true,
             event::Keycode::S => input_state.down = true,
@@ -221,7 +225,10 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         let mut input_state = self.world.write_resource::<InputState>();
 
         match key {
-            // Update the input state
+            // Stop shooting
+            event::Keycode::Space => input_state.shoot = false,
+
+            // Stop moving in some direction
             event::Keycode::W => input_state.up = false,
             event::Keycode::A => input_state.left = false,
             event::Keycode::S => input_state.down = false,

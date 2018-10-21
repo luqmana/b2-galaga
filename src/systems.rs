@@ -36,13 +36,18 @@ pub struct PlayerControlSystem;
 
 impl<'a> System<'a> for PlayerControlSystem {
     type SystemData = (
+        Entities<'a>,
+        Read<'a, LazyUpdate>,
         Read<'a, game::InputState>,
         ReadStorage<'a, Player>,
-        WriteStorage<'a, Velocity>
+        ReadStorage<'a, Position>,
+        WriteStorage<'a, Velocity>,
     );
 
-    fn run(&mut self, (input, player, mut vel): Self::SystemData) {
-        for (_, vel) in (&player, &mut vel).join() {
+    fn run(&mut self, data: Self::SystemData) {
+        let (ent, lazy, input, player, pos, mut vel) = data;
+
+        for (_, pos, vel) in (&player, &pos, &mut vel).join() {
             // First zero out the player's velocity
             vel.x = 0.;
             vel.y = 0.;
@@ -59,6 +64,12 @@ impl<'a> System<'a> for PlayerControlSystem {
             }
             if input.right {
                 vel.x += 4.;
+            }
+
+            // Are we shooting projectiles?
+            if input.shoot {
+                let e = ent.create();
+                entities::create_player_projectile(e, *pos, &lazy);
             }
         }
     }
