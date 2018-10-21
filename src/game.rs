@@ -4,7 +4,7 @@ use systems;
 
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
-use specs::{Dispatcher, DispatcherBuilder, Join, World};
+use specs::{Dispatcher, DispatcherBuilder, Join, RunNow, World};
 
 use std::f32;
 
@@ -55,7 +55,7 @@ pub struct Galaga<'a, 'b> {
     world: World,
 
     // Runs our various systems
-    dispatcher: Dispatcher<'a, 'b>
+    dispatcher: Dispatcher<'a, 'b>,
 }
 
 impl<'a, 'b> Galaga<'a, 'b> {
@@ -101,7 +101,11 @@ impl<'a, 'b> Galaga<'a, 'b> {
             .with(systems::MovementSystem, "movement", &[])
             .build();
 
-        Ok(Galaga { ui_texts, world, dispatcher })
+        Ok(Galaga {
+            ui_texts,
+            world,
+            dispatcher,
+        })
     }
 
     // Draw the game's UI
@@ -178,5 +182,24 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         graphics::present(ctx);
 
         Ok(())
+    }
+
+    /// Respond to key down event
+    fn key_down_event(&mut self, ctx: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
+        // Quit on ESC
+        if key == event::Keycode::Escape {
+            ctx.quit().expect("Failed to exit somehow?");
+        }
+
+        // Possibly start moving the player entity
+        let mut pcs = systems::PlayerControlSystem::new(key, true);
+        pcs.run_now(&mut self.world.res);
+    }
+
+    /// Respond to key up event
+    fn key_up_event(&mut self, _: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
+        // Possibly stop moving the player entity
+        let mut pcs = systems::PlayerControlSystem::new(key, false);
+        pcs.run_now(&mut self.world.res);
     }
 }

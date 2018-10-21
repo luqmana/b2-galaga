@@ -13,10 +13,16 @@ pub fn create_player(world: &mut World) {
     };
 
     // It also has a velocity that starts off at 0
-    let vel = components::Velocity {
-        x: 0.,
-        y: 0.,
-    };
+    let vel = components::Velocity { x: 0., y: 0. };
 
-    world.create_entity().with(pos).with(vel).build();
+    // Actually mark this entity as the player so
+    // we can control it
+    let player = components::Player;
+
+    world
+        .create_entity()
+        .with(player)
+        .with(pos)
+        .with(vel)
+        .build();
 }
