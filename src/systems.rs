@@ -46,8 +46,9 @@ impl<'a> System<'a> for BaddyActions {
             age.0 += 1;
         }
 
-        // Noob baddies oscillate some number of times in the center 60% of game area
-        for (_, e, oscs, pos, vel) in (&noob, &ent, &mut oscs, &pos, &mut vel).join() {
+        // Noob baddy logic
+        for (_, e, age, oscs, pos, vel) in (&noob, &ent, &age, &mut oscs, &pos, &mut vel).join() {
+            // Noob baddies oscillate some number of times in the center 60% of game area
             let xpct = pos.x / game::GAME_WIDTH as f32;
             let dir = vel.x.is_sign_positive();
 
@@ -69,6 +70,11 @@ impl<'a> System<'a> for BaddyActions {
                 if oscs.0 == 0 {
                     lazy.remove::<Oscillates>(e);
                 }
+            }
+
+            // Noob's fire some projectiles every so often
+            if age.0 % 15 == 0 {
+                entities::create_noob_projectile(ent.create(), *pos, &lazy);
             }
         }
 

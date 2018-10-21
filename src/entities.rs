@@ -18,6 +18,9 @@ pub const PLAYER_PROJ_WIDTH: f32 = 4.;
 // Height of player's projectile
 pub const PLAYER_PROJ_HEIGHT: f32 = 8.;
 
+// Size of noob's projectile
+pub const NOOB_PROJ_SIZE: f32 = 6.;
+
 /// Creates the player entity and registers it with our world
 pub fn create_player(world: &mut World) {
     // The player has a position and starts out
@@ -64,6 +67,33 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
     let rendered = components::Rendered {
         area: [pos.x, pos.y, PLAYER_PROJ_WIDTH, PLAYER_PROJ_HEIGHT].into(),
         colour: (0x00, 0x00, 0xFF),
+    };
+
+    update.insert(e, pos);
+    update.insert(e, vel);
+    update.insert(e, rendered);
+}
+
+/// Create a projectile entity shot by a Noob baddy
+pub fn create_noob_projectile(e: Entity, b_pos: components::Position, update: &LazyUpdate) {
+    let mut rng = rand::thread_rng();
+
+    // Set projectile's position based on player's position
+    let pos = components::Position {
+        x: b_pos.x + NOOB_SIZE / 2.,
+        y: b_pos.y + NOOB_SIZE + 2.,
+    };
+
+    // Set the projectile's velocity
+    let vel = components::Velocity {
+        x: rng.gen_range(0, 2) as f32,
+        y: 4.,
+    };
+
+    // Set the projectile's size and colour
+    let rendered = components::Rendered {
+        area: [pos.x, pos.y, NOOB_PROJ_SIZE, NOOB_PROJ_SIZE].into(),
+        colour: (0xFF, 0x00, 0x00),
     };
 
     update.insert(e, pos);
