@@ -103,11 +103,15 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     // Set how many times it oscillates
     let oscs = components::Oscillates(rng.gen_range(1, 4));
 
+    // Set Noob's age
+    let age = components::BaddyAge(0);
+
     update.insert(e, noob);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
     update.insert(e, oscs);
+    update.insert(e, age);
 }
 
 /// Creates a new `Waver` baddy
