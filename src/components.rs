@@ -1,6 +1,4 @@
-use ggez::graphics::Point2;
 use specs::*;
-
 
 /// Registers all our components with Specs.
 /// Make sure to modify this if any components
@@ -12,4 +10,7 @@ pub fn register_components(world: &mut World) {
 /// Marks entities with a position (e.g. player)
 #[derive(Clone, Component, Copy)]
 #[storage(VecStorage)]
-pub struct Position(pub Point2);
+pub struct Position {
+    pub x: f32,
+    pub y: f32,
+}

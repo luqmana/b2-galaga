@@ -5,8 +5,11 @@ extern crate specs_derive;
 
 use ggez::{conf, event, ContextBuilder, GameError};
 
-/// Components in our ECS
+/// The various components the entities in our game can have
 mod components;
+
+/// The various entities in the game
+mod entities;
 
 /// Main game state structure and game loop
 mod game;

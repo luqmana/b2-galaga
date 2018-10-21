@@ -1,8 +1,9 @@
 use components::{self, *};
+use entities;
 
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
-use specs::{Builder, Join, World};
+use specs::{Join, World};
 
 use std::f32;
 
@@ -16,10 +17,10 @@ pub const WINDOW_HEIGHT: u32 = 600;
 const SIDEBAR_WIDTH: u32 = 100;
 
 /// The playable game area width
-const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
+pub const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
 
 /// The playable game area height
-const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
+pub const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
 
 // Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
@@ -89,8 +90,7 @@ impl Galaga {
         components::register_components(&mut world);
 
         // Create our player entity
-        let pos = Point2::new(GAME_WIDTH as f32 / 2., GAME_HEIGHT as f32 / 2.);
-        world.create_entity().with(Position(pos)).build();
+        entities::create_player(&mut world);
 
         Ok(Galaga { ui_texts, world })
     }
@@ -134,7 +134,7 @@ impl Galaga {
 
         for pos in (&positions).join() {
             // TODO: Not all entities will use PLAYER_SIZE
-            let rect = graphics::Rect::new(pos.0[0], pos.0[1], PLAYER_SIZE, PLAYER_SIZE);
+            let rect = graphics::Rect::new(pos.x, pos.y, PLAYER_SIZE, PLAYER_SIZE);
 
             graphics::set_color(ctx, (0xAA, 0xAA, 0xAA).into())?;
             graphics::rectangle(ctx, graphics::DrawMode::Fill, rect)?;
