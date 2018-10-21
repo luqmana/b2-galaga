@@ -4,7 +4,7 @@ use game;
 use specs::*;
 
 // Size of player square
-const PLAYER_SIZE: f32 = 20.;
+pub const PLAYER_SIZE: f32 = 20.;
 
 /// Creates the player entity and registers it with our world
 pub fn create_player(world: &mut World) {

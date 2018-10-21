@@ -1,4 +1,6 @@
 use components::*;
+use entities;
+use game;
 
 use ggez::event;
 use specs::*;
@@ -7,12 +9,25 @@ use specs::*;
 pub struct MovementSystem;
 
 impl<'a> System<'a> for MovementSystem {
-    type SystemData = (WriteStorage<'a, Position>, ReadStorage<'a, Velocity>);
+    type SystemData = (
+        ReadStorage<'a, Player>,
+        WriteStorage<'a, Position>,
+        ReadStorage<'a, Velocity>,
+    );
 
-    fn run(&mut self, (mut pos, vel): Self::SystemData) {
+    fn run(&mut self, (player, mut pos, vel): Self::SystemData) {
+        // Update entities' positions using their velocities'
         for (pos, vel) in (&mut pos, &vel).join() {
             pos.x += vel.x;
             pos.y += vel.y;
+        }
+
+        // But make sure the player stays in bounds
+        if let Some((pos, _)) = (&mut pos, &player).join().next() {
+            let x_bound = game::GAME_WIDTH as f32 - entities::PLAYER_SIZE;
+            let y_bound = game::GAME_HEIGHT as f32 - entities::PLAYER_SIZE;
+            pos.x = pos.x.min(x_bound).max(0.);
+            pos.y = pos.y.min(y_bound).max(0.);
         }
     }
 }
