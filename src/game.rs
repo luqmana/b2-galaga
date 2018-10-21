@@ -1,4 +1,4 @@
-use components::*;
+use components::{self, *};
 
 use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
 use ggez::{event, graphics, Context, GameResult};
@@ -85,8 +85,8 @@ impl Galaga {
         // Let's setup our ECS
         let mut world = World::new();
 
-        // Register all our components
-        world.register::<Position>();
+        // Register our components
+        components::register_components(&mut world);
 
         // Create our player entity
         let pos = Point2::new(GAME_WIDTH as f32 / 2., GAME_HEIGHT as f32 / 2.);
