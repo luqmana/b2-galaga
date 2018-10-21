@@ -24,12 +24,14 @@ pub struct MovementSystem;
 
 impl<'a> System<'a> for MovementSystem {
     type SystemData = (
+        Entities<'a>,
         ReadStorage<'a, Player>,
         WriteStorage<'a, Position>,
+        WriteStorage<'a, Rendered>,
         ReadStorage<'a, Velocity>,
     );
 
-    fn run(&mut self, (player, mut pos, vel): Self::SystemData) {
+    fn run(&mut self, (ent, player, mut pos, mut rendered, vel): Self::SystemData) {
         // Update entities' positions using their velocities'
         for (pos, vel) in (&mut pos, &vel).join() {
             pos.x += vel.x;
@@ -42,6 +44,18 @@ impl<'a> System<'a> for MovementSystem {
             let y_bound = game::GAME_HEIGHT as f32 - entities::PLAYER_SIZE;
             pos.x = pos.x.min(x_bound).max(0.);
             pos.y = pos.y.min(y_bound).max(0.);
+        }
+
+        // Update the rendered area's offset to the new position
+        for (pos, rendered) in (&pos, &mut rendered).join() {
+            rendered.area.move_to([pos.x, pos.y].into());
+        }
+
+        // Delete any out of bound entity
+        for (e, rendered) in (&*ent, &rendered).join() {
+            if !rendered.area.overlaps(&game::GAME_AREA.into()) {
+                ent.delete(e).expect("unexpected generation error");
+            }
         }
     }
 }

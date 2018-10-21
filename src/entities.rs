@@ -33,7 +33,7 @@ pub fn create_player(world: &mut World) {
 
     // The player is also visible on screen
     let rendered = components::Rendered {
-        area: [0., 0., PLAYER_SIZE, PLAYER_SIZE].into(),
+        area: [pos.x, pos.y, PLAYER_SIZE, PLAYER_SIZE].into(),
         colour: (0xAA, 0xAA, 0xAA),
     };
 
@@ -59,7 +59,7 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
 
     // Set the projectile's size and colour
     let rendered = components::Rendered {
-        area: [0., 0., PLAYER_PROJ_WIDTH, PLAYER_PROJ_HEIGHT].into(),
+        area: [pos.x, pos.y, PLAYER_PROJ_WIDTH, PLAYER_PROJ_HEIGHT].into(),
         colour: (0x00, 0x00, 0xFF),
     };
 
@@ -90,7 +90,7 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
 
     // Set the noob's size and colour
     let rendered = components::Rendered {
-        area: [0., 0., NOOB_SIZE, NOOB_SIZE].into(),
+        area: [pos.x, pos.y, NOOB_SIZE, NOOB_SIZE].into(),
         colour: (0xDD, 0x66, 0x33),
     };
 

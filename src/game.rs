@@ -23,6 +23,14 @@ pub const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
 /// The playable game area height
 pub const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
 
+// Playable area
+pub const GAME_AREA: [f32; 4] = [
+    0.,
+    0.,
+    GAME_WIDTH as f32,
+    GAME_HEIGHT as f32
+];
+
 // Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
     GAME_WIDTH as f32,
@@ -162,16 +170,13 @@ impl<'a, 'b> Galaga<'a, 'b> {
         Ok(())
     }
 
-    /// Draw all entities w/ Position
+    /// Draw all entities that should be rendered
     fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let position = self.world.read_storage::<Position>();
         let rendered = self.world.read_storage::<Rendered>();
 
-        for (pos, rendered) in (&position, &rendered).join() {
-            let mut rect = rendered.area;
-            rect.move_to([pos.x, pos.y].into());
+        for rendered in (&rendered).join() {
             graphics::set_color(ctx, rendered.colour.into())?;
-            graphics::rectangle(ctx, graphics::DrawMode::Fill, rect)?;
+            graphics::rectangle(ctx, graphics::DrawMode::Fill, rendered.area)?;
         }
 
         Ok(())
@@ -196,7 +201,7 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         // Clear the old screen
         graphics::clear(ctx);
 
-        // Draw all entities w/ Position
+        // Draw all entities that should be rendered
         self.draw_entities(ctx)?;
 
         // Draw the UI
