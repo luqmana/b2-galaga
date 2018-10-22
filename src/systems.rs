@@ -197,17 +197,32 @@ pub struct CollisionSystem;
 impl<'a> System<'a> for CollisionSystem {
     type SystemData = (
         Entities<'a>,
+        Read<'a, LazyUpdate>,
+        Read<'a, game::Frames>,
         Write<'a, game::PlayerHealth>,
         Write<'a, game::PlayerScore>,
         WriteStorage<'a, Baddy>,
         ReadStorage<'a, DamageBaddy>,
         ReadStorage<'a, DamagePlayer>,
         ReadStorage<'a, Player>,
+        ReadStorage<'a, Position>,
         ReadStorage<'a, Rendered>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut health, mut score, mut baddy, damage_b, damage_p, player, rendered) = data;
+        let (
+            ent,
+            lazy,
+            frame,
+            mut health,
+            mut score,
+            mut baddy,
+            damage_b,
+            damage_p,
+            player,
+            pos,
+            rendered,
+        ) = data;
 
         // Grab the player's render area
         let player_area = (&player, &rendered)
@@ -217,7 +232,7 @@ impl<'a> System<'a> for CollisionSystem {
             .expect("no player rendered component?");
 
         // Go over all baddies and see if we hit em!
-        for (b, b_e, b_rendered) in (&mut baddy, &*ent, &rendered).join() {
+        for (b, b_pos, b_e, b_rendered) in (&mut baddy, &pos, &*ent, &rendered).join() {
             // Go over entities that can hurt baddies
             for (_, d_e, d_rendered) in (&damage_b, &*ent, &rendered).join() {
                 if b_rendered.area.overlaps(&d_rendered.area) {
@@ -229,6 +244,10 @@ impl<'a> System<'a> for CollisionSystem {
                         // score and remove baddy
                         if b.health == 0 {
                             score.0 += b.score;
+
+                            // Show little score popup
+                            let e = ent.create();
+                            entities::create_score_popup(e, *b_pos, b.score, frame.0, &lazy);
 
                             ent.delete(b_e).expect("unexpected generation error");
                         }

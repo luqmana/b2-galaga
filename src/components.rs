@@ -13,6 +13,7 @@ pub fn register_components(world: &mut World) {
     world.register::<Player>();
     world.register::<Position>();
     world.register::<Rendered>();
+    world.register::<ScoreText>();
     world.register::<Velocity>();
     world.register::<WaverBaddy>();
 }
@@ -65,6 +66,14 @@ pub struct Position {
 pub struct Rendered {
     pub area: graphics::Rect,
     pub colour: (u8, u8, u8),
+}
+
+/// Marks score text popup entities
+#[derive(Clone, Component, Copy)]
+#[storage(VecStorage)]
+pub struct ScoreText {
+    pub score: u32,
+    pub frame: u64,
 }
 
 /// Marks entities with a velocity

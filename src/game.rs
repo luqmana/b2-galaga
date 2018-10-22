@@ -6,6 +6,7 @@ use ggez::graphics::{Font, HorizontalAlign, Layout, Point2, Scale, TextCached};
 use ggez::{event, graphics, timer, Context, GameResult};
 use specs::{Dispatcher, DispatcherBuilder, Join, World};
 
+use std::collections::HashMap;
 use std::f32;
 
 /// The entire game window width
@@ -84,6 +85,9 @@ pub struct Galaga<'a, 'b> {
     // UI text items
     ui_texts: UITexts,
 
+    // Scores that show briefly after killing a baddy
+    score_popup_texts: HashMap<u32, TextCached>,
+
     // ECS world
     world: World,
 
@@ -126,6 +130,8 @@ impl<'a, 'b> Galaga<'a, 'b> {
             Some(Layout::default().h_align(HorizontalAlign::Center)),
         );
 
+        let score_popup_texts = HashMap::new();
+
         // Let's setup our ECS
         let mut world = World::new();
 
@@ -164,6 +170,7 @@ impl<'a, 'b> Galaga<'a, 'b> {
         Ok(Galaga {
             game_over,
             ui_texts,
+            score_popup_texts,
             world,
             dispatcher,
         })
@@ -221,11 +228,47 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
     /// Draw all entities that should be rendered
     fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let rendered = self.world.read_storage::<Rendered>();
+        // Draw entities marked with Rendered
+        {
+            let rendered = self.world.read_storage::<Rendered>();
 
-        for rendered in (&rendered).join() {
-            graphics::set_color(ctx, rendered.colour.into())?;
-            graphics::rectangle(ctx, graphics::DrawMode::Fill, rendered.area)?;
+            for rendered in (&rendered).join() {
+                graphics::set_color(ctx, rendered.colour.into())?;
+                graphics::rectangle(ctx, graphics::DrawMode::Fill, rendered.area)?;
+            }
+        }
+
+        // Draw popup text
+        self.draw_text_popups(ctx)?;
+
+        Ok(())
+    }
+
+    /// Draw temporary popup text
+    fn draw_text_popups(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let frames = self.world.read_resource::<Frames>();
+        let ent = self.world.entities();
+        let score_text = self.world.read_storage::<ScoreText>();
+        let position = self.world.read_storage::<Position>();
+
+        // Draw score text
+        for (e, score_text, pos) in (&ent, &score_text, &position).join() {
+            // We don't want to create a new TextCached every frame,
+            // so we first look it up in the hashmap before just making a new one
+            let text = self
+                .score_popup_texts
+                .entry(score_text.score)
+                .or_insert_with(|| TextCached::new(format!("{}", score_text.score)).unwrap());
+
+            // Draw the text
+            text.queue(ctx, [pos.x, pos.y].into(), Some((0x99, 0x99, 0x99).into()));
+            TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
+
+            // We only display the text for 60 frames,
+            // remove it after that time
+            if frames.0 > score_text.frame + 60 {
+                ent.delete(e).expect("unexepected generation error");
+            }
         }
 
         Ok(())

@@ -212,3 +212,18 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
     update.insert(e, rendered);
     update.insert(e, waver);
 }
+
+/// Creates the score popup after killing a baddy
+pub fn create_score_popup(
+    e: Entity,
+    pos: components::Position,
+    score: u32,
+    frame: u64,
+    update: &LazyUpdate,
+) {
+    // Mark it as score text popup
+    let score_text = components::ScoreText { score, frame };
+
+    update.insert(e, score_text);
+    update.insert(e, pos);
+}
