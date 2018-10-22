@@ -198,14 +198,15 @@ impl<'a> System<'a> for CollisionSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, game::PlayerHealth>,
-        ReadStorage<'a, Baddy>,
-        ReadStorage<'a, Damage>,
+        WriteStorage<'a, Baddy>,
+        ReadStorage<'a, DamageBaddy>,
+        ReadStorage<'a, DamagePlayer>,
         ReadStorage<'a, Player>,
         ReadStorage<'a, Rendered>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut health, baddy, damage, player, rendered) = data;
+        let (ent, mut health, mut baddy, damage_b, damage_p, player, rendered) = data;
 
         // Grab the player's render area
         let player_area = (&player, &rendered)
@@ -214,11 +215,30 @@ impl<'a> System<'a> for CollisionSystem {
             .next()
             .expect("no player rendered component?");
 
+        // Go over all baddies and see if we hit em!
+        for (b, b_e, b_rendered) in (&mut baddy, &*ent, &rendered).join() {
+            // Go over entities that can hurt baddies
+            for (_, d_e, d_rendered) in (&damage_b, &*ent, &rendered).join() {
+                if b_rendered.area.overlaps(&d_rendered.area) {
+                    // Decrement baddy's health
+                    b.health -= 1;
+
+                    // Remove baddy if health dips to 0
+                    if b.health == 0 {
+                        ent.delete(b_e).expect("unexpected generation error");
+                    }
+
+                    // Remove the damaging entity
+                    ent.delete(d_e).expect("unexpected generation error");
+                }
+            }
+        }
+
         // Go over all entities that can damage the player
-        for (_, e, rendered) in (&damage, &*ent, &rendered).join() {
+        for (_, e, rendered) in (&damage_p, &*ent, &rendered).join() {
             // Ouch, we hit a baddy or projectile :(
             if rendered.area.overlaps(&player_area) {
-                // Decrement health
+                // Decrement player's health
                 health.0 -= 1.;
 
                 // This baddy or projectile did its job, let it go now

@@ -69,6 +69,10 @@ pub fn create_player_projectile(e: Entity, p_pos: components::Position, update: 
         colour: (0x00, 0x00, 0xFF),
     };
 
+    // Player's projectiles can hurt baddies
+    let damage = components::DamageBaddy;
+
+    update.insert(e, damage);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
@@ -97,7 +101,7 @@ pub fn create_noob_projectile(e: Entity, b_pos: components::Position, update: &L
     };
 
     // Noobs' projectiles can hurt the player
-    let damage = components::Damage;
+    let damage = components::DamagePlayer;
 
     update.insert(e, damage);
     update.insert(e, pos);
@@ -141,7 +145,7 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     let oscs = components::Oscillates(rng.gen_range(1, 4));
 
     // Noobs can hurt the player
-    let damage = components::Damage;
+    let damage = components::DamagePlayer;
 
     update.insert(e, baddy);
     update.insert(e, damage);
@@ -191,7 +195,7 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
     let baddy = components::Baddy { age: 0, health: 1 };
 
     // Wavers can hurt the player
-    let damage = components::Damage;
+    let damage = components::DamagePlayer;
 
     update.insert(e, baddy);
     update.insert(e, damage);
