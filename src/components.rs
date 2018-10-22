@@ -5,6 +5,7 @@ use specs::*;
 /// Make sure to modify this if any components
 /// are added or removed.
 pub fn register_components(world: &mut World) {
+    world.register::<Baddy>();
     world.register::<BaddyAge>();
     world.register::<NoobBaddy>();
     world.register::<Oscillates>();
@@ -14,6 +15,11 @@ pub fn register_components(world: &mut World) {
     world.register::<Velocity>();
     world.register::<WaverBaddy>();
 }
+
+/// Marks a baddy entity
+#[derive(Component, Default)]
+#[storage(NullStorage)]
+pub struct Baddy;
 
 /// Marks baddy's age
 #[derive(Clone, Component, Copy)]

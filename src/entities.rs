@@ -96,6 +96,7 @@ pub fn create_noob_projectile(e: Entity, b_pos: components::Position, update: &L
         colour: (0xFF, 0x00, 0x00),
     };
 
+    update.insert(e, components::Baddy);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
@@ -136,6 +137,7 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     // Set Noob's age
     let age = components::BaddyAge(0);
 
+    update.insert(e, components::Baddy);
     update.insert(e, noob);
     update.insert(e, pos);
     update.insert(e, vel);
@@ -182,6 +184,7 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
     // Mark it as a Waver
     let waver = components::WaverBaddy { rank, pos, vel };
 
+    update.insert(e, components::Baddy);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);

@@ -127,7 +127,8 @@ impl<'a, 'b> Galaga<'a, 'b> {
                 systems::MovementSystem,
                 "movement",
                 &["baddy_actions", "control"],
-            ).build();
+            ).with(systems::CollisionSystem, "collision", &["movement"])
+            .build();
 
         // Initialize input state and provide it as resource
         // to be read by any system

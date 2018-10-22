@@ -190,3 +190,38 @@ impl<'a> System<'a> for PlayerControlSystem {
         }
     }
 }
+
+pub struct CollisionSystem;
+
+impl<'a> System<'a> for CollisionSystem {
+    type SystemData = (
+        Entities<'a>,
+        Write<'a, game::PlayerHealth>,
+        ReadStorage<'a, Baddy>,
+        ReadStorage<'a, Player>,
+        ReadStorage<'a, Rendered>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (ent, mut health, baddy, player, rendered) = data;
+
+        // Grab the player's render area
+        let player_area = (&player, &rendered)
+            .join()
+            .map(|p| p.1.area)
+            .next()
+            .expect("no player rendered component?");
+
+        // Go over all baddies
+        for (_, b_e, b_rendered) in (&baddy, &*ent, &rendered).join() {
+            // Ouch, we hit a baddy :(
+            if b_rendered.area.overlaps(&player_area) {
+                // Decrement health
+                health.0 -= 1.;
+
+                // This baddy did its job, let it go now
+                ent.delete(b_e).expect("unexpected generation error");
+            }
+        }
+    }
+}
