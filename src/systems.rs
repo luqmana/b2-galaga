@@ -220,12 +220,14 @@ impl<'a> System<'a> for CollisionSystem {
             // Go over entities that can hurt baddies
             for (_, d_e, d_rendered) in (&damage_b, &*ent, &rendered).join() {
                 if b_rendered.area.overlaps(&d_rendered.area) {
-                    // Decrement baddy's health
-                    b.health -= 1;
+                    if b.health > 0 {
+                        // Decrement baddy's health
+                        b.health -= 1;
 
-                    // Remove baddy if health dips to 0
-                    if b.health == 0 {
-                        ent.delete(b_e).expect("unexpected generation error");
+                        // Remove baddy if health dips to 0
+                        if b.health == 0 {
+                            ent.delete(b_e).expect("unexpected generation error");
+                        }
                     }
 
                     // Remove the damaging entity
@@ -238,8 +240,10 @@ impl<'a> System<'a> for CollisionSystem {
         for (_, e, rendered) in (&damage_p, &*ent, &rendered).join() {
             // Ouch, we hit a baddy or projectile :(
             if rendered.area.overlaps(&player_area) {
-                // Decrement player's health
-                health.0 -= 1.;
+                if health.0 > 0. {
+                    // Decrement player's health
+                    health.0 -= 1.;
+                }
 
                 // This baddy or projectile did its job, let it go now
                 ent.delete(e).expect("unexpected generation error");
