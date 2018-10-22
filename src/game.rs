@@ -66,6 +66,8 @@ pub struct InputState {
 }
 
 /// How many frames have elapsed
+/// Note, this doesn't necessarily mean how many frames were
+/// rendered to the screen but rather how many frames were computed.
 #[derive(Default)]
 pub struct Frames(pub u64);
 
@@ -307,6 +309,10 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
                     .score
                     .replace_fragment(0, format!("{:06}", new_score));
             }
+
+            // Update "frame" count
+            let mut frames = self.world.write_resource::<Frames>();
+            frames.0 += 1;
         }
 
         Ok(())
@@ -325,10 +331,6 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
 
         // Now, actually put everything onto the screen
         graphics::present(ctx);
-
-        // Update frame count
-        let mut frames = self.world.write_resource::<Frames>();
-        frames.0 += 1;
 
         Ok(())
     }
