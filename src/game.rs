@@ -2,7 +2,7 @@ use components::{self, *};
 use entities;
 use systems;
 
-use ggez::graphics::{HorizontalAlign, Layout, Point2, TextCached};
+use ggez::graphics::{Font, HorizontalAlign, Layout, Point2, Scale, TextCached};
 use ggez::{event, graphics, Context, GameResult};
 use specs::{Dispatcher, DispatcherBuilder, Join, World};
 
@@ -47,6 +47,7 @@ struct UITexts {
     health_hdr: TextCached,
     score_hdr: TextCached,
     score: TextCached,
+    game_over: TextCached,
 }
 
 /// Represents current state of the input
@@ -70,6 +71,9 @@ pub struct PlayerHealth(pub f32);
 
 /// Main game state.
 pub struct Galaga<'a, 'b> {
+    // Whether the game is over yet
+    game_over: bool,
+
     // UI text items
     ui_texts: UITexts,
 
@@ -91,6 +95,7 @@ impl<'a, 'b> Galaga<'a, 'b> {
             health_hdr: TextCached::new("HEALTH")?,
             score_hdr: TextCached::new("SCORE")?,
             score: TextCached::new("000000")?,
+            game_over: TextCached::new(("GAME\nOVER", Font::default_font()?, Scale::uniform(80.)))?,
         };
 
         // Center the text in the sidebar by setting the width to
@@ -108,6 +113,11 @@ impl<'a, 'b> Galaga<'a, 'b> {
                 Some(Layout::default().h_align(HorizontalAlign::Center)),
             );
         }
+
+        ui_texts.game_over.set_bounds(
+            [240., f32::INFINITY].into(),
+            Some(Layout::default().h_align(HorizontalAlign::Center)),
+        );
 
         // Let's setup our ECS
         let mut world = World::new();
@@ -140,7 +150,11 @@ impl<'a, 'b> Galaga<'a, 'b> {
         // And player health
         world.add_resource::<PlayerHealth>(PlayerHealth(MAX_PLAYER_HEALTH));
 
+        // We play until health goes to 0
+        let game_over = false;
+
         Ok(Galaga {
+            game_over,
             ui_texts,
             world,
             dispatcher,
@@ -184,6 +198,16 @@ impl<'a, 'b> Galaga<'a, 'b> {
         graphics::set_color(ctx, (0x00, 0xFF, 0x00).into())?;
         graphics::rectangle(ctx, graphics::DrawMode::Fill, health_rect)?;
 
+        // Draw GAMEOVER text
+        if self.game_over {
+            self.ui_texts.game_over.queue(
+                ctx,
+                [80., 220.].into(),
+                Some((0xFF, 0x00, 0x00, 0xFF).into()),
+            );
+            TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
+        }
+
         Ok(())
     }
 
@@ -204,11 +228,22 @@ impl<'a, 'b> Galaga<'a, 'b> {
 impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
     /// Called on every tick; where we handle the game logic.
     fn update(&mut self, _: &mut Context) -> GameResult<()> {
+        // Do nothing if game is over
+        if self.game_over {
+            return Ok(());
+        }
+
         // Run the systems!
         self.dispatcher.dispatch(&self.world.res);
 
         // Let any changes get reflected
         self.world.maintain();
+
+        // Check if health has gone to 0
+        let health = self.world.read_resource::<PlayerHealth>();
+        if health.0 <= 0. {
+            self.game_over = true;
+        }
 
         Ok(())
     }
