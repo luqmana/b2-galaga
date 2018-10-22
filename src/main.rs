@@ -1,3 +1,7 @@
+// Hide the console when launched on Windows
+// Ignored on !Windows
+#![windows_subsystem = "windows"]
+
 extern crate ggez;
 extern crate rand;
 extern crate specs;
