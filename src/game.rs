@@ -69,6 +69,10 @@ pub struct Frames(pub u64);
 #[derive(Default)]
 pub struct PlayerHealth(pub f32);
 
+/// Player's current score
+#[derive(Default)]
+pub struct PlayerScore(pub u32);
+
 /// Main game state.
 pub struct Galaga<'a, 'b> {
     // Whether the game is over yet
@@ -147,8 +151,9 @@ impl<'a, 'b> Galaga<'a, 'b> {
         // Also provide frame count as resource
         world.add_resource::<Frames>(Default::default());
 
-        // And player health
+        // And player health and score
         world.add_resource::<PlayerHealth>(PlayerHealth(MAX_PLAYER_HEALTH));
+        world.add_resource::<PlayerScore>(Default::default());
 
         // We play until health goes to 0
         let game_over = false;
@@ -233,6 +238,9 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
             return Ok(());
         }
 
+        // Read the current score
+        let score = self.world.read_resource::<PlayerScore>().0;
+
         // Run the systems!
         self.dispatcher.dispatch(&self.world.res);
 
@@ -240,9 +248,17 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         self.world.maintain();
 
         // Check if health has gone to 0
-        let health = self.world.read_resource::<PlayerHealth>();
-        if health.0 <= 0. {
+        let health = self.world.read_resource::<PlayerHealth>().0;
+        if health <= 0. {
             self.game_over = true;
+        }
+
+        // Check if score has changed
+        let new_score = self.world.read_resource::<PlayerScore>().0;
+        if score != new_score {
+            self.ui_texts
+                .score
+                .replace_fragment(0, format!("{:06}", new_score));
         }
 
         Ok(())

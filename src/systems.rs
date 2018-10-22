@@ -198,6 +198,7 @@ impl<'a> System<'a> for CollisionSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, game::PlayerHealth>,
+        Write<'a, game::PlayerScore>,
         WriteStorage<'a, Baddy>,
         ReadStorage<'a, DamageBaddy>,
         ReadStorage<'a, DamagePlayer>,
@@ -206,7 +207,7 @@ impl<'a> System<'a> for CollisionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut health, mut baddy, damage_b, damage_p, player, rendered) = data;
+        let (ent, mut health, mut score, mut baddy, damage_b, damage_p, player, rendered) = data;
 
         // Grab the player's render area
         let player_area = (&player, &rendered)
@@ -224,8 +225,11 @@ impl<'a> System<'a> for CollisionSystem {
                         // Decrement baddy's health
                         b.health -= 1;
 
-                        // Remove baddy if health dips to 0
+                        // Baddy was vanquished! Update player
+                        // score and remove baddy
                         if b.health == 0 {
+                            score.0 += b.score;
+
                             ent.delete(b_e).expect("unexpected generation error");
                         }
                     }

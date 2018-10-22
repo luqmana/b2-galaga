@@ -23,6 +23,7 @@ pub fn register_components(world: &mut World) {
 pub struct Baddy {
     pub age: u64,
     pub health: u64,
+    pub score: u32,
 }
 
 /// Marks entities that can damage baddies

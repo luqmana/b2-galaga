@@ -116,8 +116,12 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     // Mark it as a Noob
     let noob = components::NoobBaddy;
 
-    // and a baddy entity in general with age and health
-    let baddy = components::Baddy { age: 0, health: 3 };
+    // and a baddy entity in general with age, health and score
+    let baddy = components::Baddy {
+        age: 0,
+        health: 3,
+        score: 100,
+    };
 
     // Choose the Noob's starting position
     let pos = components::Position {
@@ -191,8 +195,12 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
     // Mark it as a Waver
     let waver = components::WaverBaddy { rank, pos, vel };
 
-    // and a baddy entity in general with age and health
-    let baddy = components::Baddy { age: 0, health: 1 };
+    // and a baddy entity in general with age, health and score
+    let baddy = components::Baddy {
+        age: 0,
+        health: 1,
+        score: 10,
+    };
 
     // Wavers can hurt the player
     let damage = components::DamagePlayer;
