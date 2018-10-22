@@ -3,7 +3,7 @@ use entities;
 use systems;
 
 use ggez::graphics::{Font, HorizontalAlign, Layout, Point2, Scale, TextCached};
-use ggez::{event, graphics, Context, GameResult};
+use ggez::{event, graphics, timer, Context, GameResult};
 use specs::{Dispatcher, DispatcherBuilder, Join, World};
 
 use std::f32;
@@ -42,6 +42,9 @@ const MAX_PLAYER_HEALTH: f32 = 10.;
 
 /// BG colour of sidebar ui
 const SIDEBAR_COLOUR: (u8, u8, u8) = (0x55, 0x55, 0x55);
+
+/// Our desired FPS
+const DESIRED_FPS: u32 = 60;
 
 struct UITexts {
     health_hdr: TextCached,
@@ -232,33 +235,35 @@ impl<'a, 'b> Galaga<'a, 'b> {
 /// Implmentation for our game mainloop.
 impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
     /// Called on every tick; where we handle the game logic.
-    fn update(&mut self, _: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         // Do nothing if game is over
         if self.game_over {
             return Ok(());
         }
 
-        // Read the current score
-        let score = self.world.read_resource::<PlayerScore>().0;
+        while timer::check_update_time(ctx, DESIRED_FPS) {
+            // Read the current score
+            let score = self.world.read_resource::<PlayerScore>().0;
 
-        // Run the systems!
-        self.dispatcher.dispatch(&self.world.res);
+            // Run the systems!
+            self.dispatcher.dispatch(&self.world.res);
 
-        // Let any changes get reflected
-        self.world.maintain();
+            // Let any changes get reflected
+            self.world.maintain();
 
-        // Check if health has gone to 0
-        let health = self.world.read_resource::<PlayerHealth>().0;
-        if health <= 0. {
-            self.game_over = true;
-        }
+            // Check if health has gone to 0
+            let health = self.world.read_resource::<PlayerHealth>().0;
+            if health <= 0. {
+                self.game_over = true;
+            }
 
-        // Check if score has changed
-        let new_score = self.world.read_resource::<PlayerScore>().0;
-        if score != new_score {
-            self.ui_texts
-                .score
-                .replace_fragment(0, format!("{:06}", new_score));
+            // Check if score has changed
+            let new_score = self.world.read_resource::<PlayerScore>().0;
+            if score != new_score {
+                self.ui_texts
+                    .score
+                    .replace_fragment(0, format!("{:06}", new_score));
+            }
         }
 
         Ok(())
