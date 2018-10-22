@@ -96,7 +96,10 @@ pub fn create_noob_projectile(e: Entity, b_pos: components::Position, update: &L
         colour: (0xFF, 0x00, 0x00),
     };
 
-    update.insert(e, components::Baddy);
+    // Noobs' projectiles can hurt the player
+    let damage = components::Damage;
+
+    update.insert(e, damage);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
@@ -108,6 +111,9 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
 
     // Mark it as a Noob
     let noob = components::NoobBaddy;
+
+    // and a baddy entity in general with age and health
+    let baddy = components::Baddy { age: 0, health: 3 };
 
     // Choose the Noob's starting position
     let pos = components::Position {
@@ -134,16 +140,16 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
     // Set how many times it oscillates
     let oscs = components::Oscillates(rng.gen_range(1, 4));
 
-    // Set Noob's age
-    let age = components::BaddyAge(0);
+    // Noobs can hurt the player
+    let damage = components::Damage;
 
-    update.insert(e, components::Baddy);
+    update.insert(e, baddy);
+    update.insert(e, damage);
     update.insert(e, noob);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
     update.insert(e, oscs);
-    update.insert(e, age);
 }
 
 /// Creates a new `Waver` baddy
@@ -178,16 +184,19 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
         colour: (0xFF, 0x00, 0xFF),
     };
 
-    // Set Waver's age
-    let age = components::BaddyAge(0);
-
     // Mark it as a Waver
     let waver = components::WaverBaddy { rank, pos, vel };
 
-    update.insert(e, components::Baddy);
+    // and a baddy entity in general with age and health
+    let baddy = components::Baddy { age: 0, health: 1 };
+
+    // Wavers can hurt the player
+    let damage = components::Damage;
+
+    update.insert(e, baddy);
+    update.insert(e, damage);
     update.insert(e, pos);
     update.insert(e, vel);
     update.insert(e, rendered);
-    update.insert(e, age);
     update.insert(e, waver);
 }

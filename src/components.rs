@@ -6,7 +6,7 @@ use specs::*;
 /// are added or removed.
 pub fn register_components(world: &mut World) {
     world.register::<Baddy>();
-    world.register::<BaddyAge>();
+    world.register::<Damage>();
     world.register::<NoobBaddy>();
     world.register::<Oscillates>();
     world.register::<Player>();
@@ -17,14 +17,17 @@ pub fn register_components(world: &mut World) {
 }
 
 /// Marks a baddy entity
-#[derive(Component, Default)]
-#[storage(NullStorage)]
-pub struct Baddy;
-
-/// Marks baddy's age
 #[derive(Clone, Component, Copy)]
 #[storage(VecStorage)]
-pub struct BaddyAge(pub u64);
+pub struct Baddy {
+    pub age: u64,
+    pub health: u64,
+}
+
+/// Marks entities that can damage the player
+#[derive(Component, Default)]
+#[storage(NullStorage)]
+pub struct Damage;
 
 /// Marks which entities are Noob baddies
 #[derive(Component, Default)]

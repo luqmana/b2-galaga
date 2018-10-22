@@ -29,7 +29,7 @@ pub struct BaddyActions;
 impl<'a> System<'a> for BaddyActions {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, BaddyAge>,
+        WriteStorage<'a, Baddy>,
         ReadStorage<'a, NoobBaddy>,
         WriteStorage<'a, Oscillates>,
         ReadStorage<'a, Position>,
@@ -39,15 +39,16 @@ impl<'a> System<'a> for BaddyActions {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut age, noob, mut oscs, pos, mut vel, waver, lazy) = data;
+        let (ent, mut baddy, noob, mut oscs, pos, mut vel, waver, lazy) = data;
 
         // Update baddies' ages
-        for age in (&mut age).join() {
-            age.0 += 1;
+        for baddy in (&mut baddy).join() {
+            baddy.age += 1;
         }
 
         // Noob baddy logic
-        for (_, e, age, oscs, pos, vel) in (&noob, &ent, &age, &mut oscs, &pos, &mut vel).join() {
+        for (_, e, baddy, oscs, pos, vel) in (&noob, &ent, &baddy, &mut oscs, &pos, &mut vel).join()
+        {
             // Noob baddies oscillate some number of times in the center 60% of game area
             let xpct = pos.x / game::GAME_WIDTH as f32;
             let dir = vel.x.is_sign_positive();
@@ -73,20 +74,20 @@ impl<'a> System<'a> for BaddyActions {
             }
 
             // Noob's fire some projectiles every so often
-            if age.0 % 15 == 0 {
+            if baddy.age % 15 == 0 {
                 entities::create_noob_projectile(ent.create(), *pos, &lazy);
             }
         }
 
         // Waver baddy logic
-        for (waver, age, vel) in (&waver, &age, &mut vel).join() {
+        for (waver, baddy, vel) in (&waver, &baddy, &mut vel).join() {
             // If we're not the last waver, summon the rest of our wave
-            if age.0 == 15 && waver.rank > 0 {
+            if baddy.age == 15 && waver.rank > 0 {
                 entities::create_waver_baddy(ent.create(), Some(*waver), &lazy);
             }
 
             // Decrease vertical velocity
-            if age.0 % 8 == 0 {
+            if baddy.age % 8 == 0 {
                 vel.y -= 1.;
             }
         }
@@ -198,12 +199,13 @@ impl<'a> System<'a> for CollisionSystem {
         Entities<'a>,
         Write<'a, game::PlayerHealth>,
         ReadStorage<'a, Baddy>,
+        ReadStorage<'a, Damage>,
         ReadStorage<'a, Player>,
         ReadStorage<'a, Rendered>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (ent, mut health, baddy, player, rendered) = data;
+        let (ent, mut health, baddy, damage, player, rendered) = data;
 
         // Grab the player's render area
         let player_area = (&player, &rendered)
@@ -212,15 +214,15 @@ impl<'a> System<'a> for CollisionSystem {
             .next()
             .expect("no player rendered component?");
 
-        // Go over all baddies
-        for (_, b_e, b_rendered) in (&baddy, &*ent, &rendered).join() {
-            // Ouch, we hit a baddy :(
-            if b_rendered.area.overlaps(&player_area) {
+        // Go over all entities that can damage the player
+        for (_, e, rendered) in (&damage, &*ent, &rendered).join() {
+            // Ouch, we hit a baddy or projectile :(
+            if rendered.area.overlaps(&player_area) {
                 // Decrement health
                 health.0 -= 1.;
 
-                // This baddy did its job, let it go now
-                ent.delete(b_e).expect("unexpected generation error");
+                // This baddy or projectile did its job, let it go now
+                ent.delete(e).expect("unexpected generation error");
             }
         }
     }
