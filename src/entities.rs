@@ -1,5 +1,5 @@
-use components;
-use game;
+use crate::components;
+use crate::game;
 
 use rand::{self, Rng};
 use specs::*;

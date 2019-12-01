@@ -1,6 +1,6 @@
-use components::{self, *};
-use entities;
-use systems;
+use crate::components::{self, *};
+use crate::entities;
+use crate::systems;
 
 use ggez::graphics::{Align, DrawParam, FilterMode, Font, MeshBuilder, Text, TextFragment};
 use ggez::{event, graphics, timer, Context, GameResult};
