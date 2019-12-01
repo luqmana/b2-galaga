@@ -26,8 +26,8 @@ pub fn create_player(world: &mut World) {
     // The player has a position and starts out
     // at the center of the game area
     let pos = components::Position {
-        x: game::GAME_WIDTH as f32 / 2.,
-        y: game::GAME_HEIGHT as f32 / 2.,
+        x: game::GAME_WIDTH / 2.,
+        y: game::GAME_HEIGHT / 2.,
     };
 
     // It also has a velocity that starts off at 0
@@ -128,7 +128,7 @@ pub fn create_noob_baddy(e: Entity, update: &LazyUpdate) {
         x: if rng.gen::<bool>() {
             1. - NOOB_SIZE
         } else {
-            game::GAME_WIDTH as f32 - 1.
+            game::GAME_WIDTH - 1.
         },
         y: rng.gen_range(0., 300.),
     };
@@ -175,7 +175,7 @@ pub fn create_waver_baddy(e: Entity, base: Option<components::WaverBaddy>, updat
                 x: if start_left {
                     1. - WAVER_SIZE
                 } else {
-                    game::GAME_WIDTH as f32 - 1.
+                    game::GAME_WIDTH - 1.
                 },
                 y: rng.gen_range(50u8, 149) as f32,
             },

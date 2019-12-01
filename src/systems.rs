@@ -50,7 +50,7 @@ impl<'a> System<'a> for BaddyActions {
         for (_, e, baddy, oscs, pos, vel) in (&noob, &ent, &baddy, &mut oscs, &pos, &mut vel).join()
         {
             // Noob baddies oscillate some number of times in the center 60% of game area
-            let xpct = pos.x / game::GAME_WIDTH as f32;
+            let xpct = pos.x / game::GAME_WIDTH;
             let dir = vel.x.is_sign_positive();
 
             // Swap directions
@@ -115,8 +115,8 @@ impl<'a> System<'a> for MovementSystem {
 
         // But make sure the player stays in bounds
         if let Some((pos, _)) = (&mut pos, &player).join().next() {
-            let x_bound = game::GAME_WIDTH as f32 - entities::PLAYER_SIZE;
-            let y_bound = game::GAME_HEIGHT as f32 - entities::PLAYER_SIZE;
+            let x_bound = game::GAME_WIDTH - entities::PLAYER_SIZE;
+            let y_bound = game::GAME_HEIGHT - entities::PLAYER_SIZE;
             pos.x = pos.x.min(x_bound).max(0.);
             pos.y = pos.y.min(y_bound).max(0.);
         }
