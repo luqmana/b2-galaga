@@ -123,7 +123,7 @@ impl<'a> System<'a> for MovementSystem {
 
         // Update the rendered area's offset to the new position
         for (pos, rendered) in (&pos, &mut rendered).join() {
-            rendered.area.move_to([pos.x, pos.y].into());
+            rendered.area.move_to([pos.x, pos.y]);
         }
 
         // Delete any out of bound entity

@@ -2,37 +2,37 @@ use components::{self, *};
 use entities;
 use systems;
 
-use ggez::graphics::{Font, HorizontalAlign, Layout, Point2, Scale, TextCached};
+use ggez::graphics::{Align, DrawParam, FilterMode, Font, MeshBuilder, Text, TextFragment};
 use ggez::{event, graphics, timer, Context, GameResult};
-use specs::{Dispatcher, DispatcherBuilder, Join, World};
+use specs::{Dispatcher, DispatcherBuilder, Join, World, WorldExt};
 
 use std::collections::HashMap;
 use std::f32;
 
 /// The entire game window width
-pub const WINDOW_WIDTH: u32 = 500;
+pub const WINDOW_WIDTH: f32 = 500.;
 
 /// The entire game window height
-pub const WINDOW_HEIGHT: u32 = 600;
+pub const WINDOW_HEIGHT: f32 = 600.;
 
 /// How much of the game window width is taken up by the ui
-const SIDEBAR_WIDTH: u32 = 100;
+const SIDEBAR_WIDTH: f32 = 100.;
 
 /// The playable game area width
-pub const GAME_WIDTH: u32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
+pub const GAME_WIDTH: f32 = WINDOW_WIDTH - SIDEBAR_WIDTH;
 
 /// The playable game area height
-pub const GAME_HEIGHT: u32 = WINDOW_HEIGHT;
+pub const GAME_HEIGHT: f32 = WINDOW_HEIGHT;
 
 /// Playable area
-pub const GAME_AREA: [f32; 4] = [0., 0., GAME_WIDTH as f32, GAME_HEIGHT as f32];
+pub const GAME_AREA: [f32; 4] = [0., 0., GAME_WIDTH, GAME_HEIGHT];
 
 /// Area occupied by sidebar ui
 const SIDEBAR_AREA: [f32; 4] = [
-    GAME_WIDTH as f32,
+    GAME_WIDTH,
     0.,
-    SIDEBAR_WIDTH as f32,
-    WINDOW_HEIGHT as f32,
+    SIDEBAR_WIDTH,
+    WINDOW_HEIGHT,
 ];
 
 /// Health bar
@@ -48,10 +48,10 @@ const SIDEBAR_COLOUR: (u8, u8, u8) = (0x55, 0x55, 0x55);
 const DESIRED_FPS: u32 = 60;
 
 struct UITexts {
-    health_hdr: TextCached,
-    score_hdr: TextCached,
-    score: TextCached,
-    game_over: TextCached,
+    health_hdr: Text,
+    score_hdr: Text,
+    score: Text,
+    game_over: Text,
 }
 
 /// Represents current state of the input
@@ -88,7 +88,7 @@ pub struct Galaga<'a, 'b> {
     ui_texts: UITexts,
 
     // Scores that show briefly after killing a baddy
-    score_popup_texts: HashMap<u32, TextCached>,
+    score_popup_texts: HashMap<u32, Text>,
 
     // ECS world
     world: World,
@@ -99,16 +99,13 @@ pub struct Galaga<'a, 'b> {
 
 impl<'a, 'b> Galaga<'a, 'b> {
     /// Create new instance of our game state
-    pub fn new(ctx: &mut Context) -> GameResult<Galaga<'a, 'b>> {
-        // Let's set the background colour to black
-        graphics::set_background_color(ctx, graphics::BLACK);
-
+    pub fn new() -> Galaga<'a, 'b> {
         // Now let's create the various text fragments in our game
         let mut ui_texts = UITexts {
-            health_hdr: TextCached::new("HEALTH")?,
-            score_hdr: TextCached::new("SCORE")?,
-            score: TextCached::new("000000")?,
-            game_over: TextCached::new(("GAME\nOVER", Font::default_font()?, Scale::uniform(80.)))?,
+            health_hdr: Text::new("HEALTH"),
+            score_hdr: Text::new("SCORE"),
+            score: Text::new("000000"),
+            game_over: Text::new(("GAME\nOVER", Font::default(), 80.)),
         };
 
         // Center the text in the sidebar by setting the width to
@@ -122,14 +119,14 @@ impl<'a, 'b> Galaga<'a, 'b> {
             .iter_mut()
         {
             txt.set_bounds(
-                Point2::new(SIDEBAR_WIDTH as f32, f32::INFINITY),
-                Some(Layout::default().h_align(HorizontalAlign::Center)),
+                [SIDEBAR_WIDTH, f32::INFINITY],
+                Align::Center
             );
         }
 
         ui_texts.game_over.set_bounds(
-            [240., f32::INFINITY].into(),
-            Some(Layout::default().h_align(HorizontalAlign::Center)),
+            [240., f32::INFINITY],
+            Align::Center
         );
 
         let score_popup_texts = HashMap::new();
@@ -157,88 +154,80 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
         // Initialize input state and provide it as resource
         // to be read by any system
-        world.add_resource::<InputState>(Default::default());
+        world.insert::<InputState>(Default::default());
 
         // Also provide frame count as resource
-        world.add_resource::<Frames>(Default::default());
+        world.insert::<Frames>(Default::default());
 
         // And player health and score
-        world.add_resource::<PlayerHealth>(PlayerHealth(MAX_PLAYER_HEALTH));
-        world.add_resource::<PlayerScore>(Default::default());
+        world.insert::<PlayerHealth>(PlayerHealth(MAX_PLAYER_HEALTH));
+        world.insert::<PlayerScore>(Default::default());
 
         // We play until health goes to 0
         let game_over = false;
 
-        Ok(Galaga {
+        Galaga {
             game_over,
             ui_texts,
             score_popup_texts,
             world,
             dispatcher,
-        })
+        }
     }
 
     // Draw the game's UI
     fn draw_ui(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // Set the colour and draw the sidebar ui bg
-        graphics::set_color(ctx, SIDEBAR_COLOUR.into())?;
-        graphics::rectangle(ctx, graphics::DrawMode::Fill, SIDEBAR_AREA.into())?;
+        let mut ui = MeshBuilder::new();
 
-        // Queue up the text to draw
-        self.ui_texts.health_hdr.queue(
-            ctx,
-            Point2::new(SIDEBAR_AREA[0], 15.),
-            Some(graphics::WHITE),
-        );
-        self.ui_texts.score_hdr.queue(
-            ctx,
-            Point2::new(SIDEBAR_AREA[0], 315.),
-            Some(graphics::WHITE),
-        );
-        self.ui_texts.score.queue(
-            ctx,
-            Point2::new(SIDEBAR_AREA[0], 335.),
-            Some(graphics::WHITE),
-        );
+        // Set the colour and the sidebar UI bg
+        ui.rectangle(graphics::DrawMode::fill(), SIDEBAR_AREA.into(), SIDEBAR_COLOUR.into());
 
-        // Draw all queued text
-        TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
+        // The health bar BG
+        ui.rectangle(graphics::DrawMode::fill(), HEALTHBAR_BG.into(), graphics::BLACK);
 
-        // Draw the health bar BG
-        graphics::set_color(ctx, graphics::BLACK)?;
-        graphics::rectangle(ctx, graphics::DrawMode::Fill, HEALTHBAR_BG.into())?;
-
-        // Draw the health bar
+        // The health bar
         let health = self.world.read_resource::<PlayerHealth>();
         let lvl = 250. - 200. * health.0 / MAX_PLAYER_HEALTH;
         let health_rect = [HEALTHBAR_BG[0] + 3., lvl, 40., 250. - lvl].into();
-        graphics::set_color(ctx, (0x00, 0xFF, 0x00).into())?;
-        graphics::rectangle(ctx, graphics::DrawMode::Fill, health_rect)?;
+        ui.rectangle(graphics::DrawMode::fill(), health_rect, (0x00, 0xFF, 0x00).into());
 
-        // Draw GAMEOVER text
+        // Queue up the text to draw
+        graphics::queue_text(ctx, &self.ui_texts.health_hdr, [SIDEBAR_AREA[0], 15.], Some(graphics::WHITE));
+        graphics::queue_text(ctx, &self.ui_texts.score_hdr, [SIDEBAR_AREA[0], 315.], Some(graphics::WHITE));
+        graphics::queue_text(ctx, &self.ui_texts.score, [SIDEBAR_AREA[0], 335.], Some(graphics::WHITE));
+
+        // Queue draw GAMEOVER text if needed
         if self.game_over {
-            self.ui_texts.game_over.queue(
+            graphics::queue_text(
                 ctx,
-                [80., 220.].into(),
+                &self.ui_texts.game_over,
+                [80., 220.],
                 Some((0xFF, 0x00, 0x00, 0xFF).into()),
             );
-            TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
         }
+
+        // Draw UI
+        let ui = ui.build(ctx)?;
+        graphics::draw(ctx, &ui, DrawParam::default())?;
 
         Ok(())
     }
 
     /// Draw all entities that should be rendered
     fn draw_entities(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // Draw entities marked with Rendered
+        // Create meshes for all entities marked with Rendered
+        let mut rendered_ents = MeshBuilder::new();
         {
             let rendered = self.world.read_storage::<Rendered>();
 
             for rendered in (&rendered).join() {
-                graphics::set_color(ctx, rendered.colour.into())?;
-                graphics::rectangle(ctx, graphics::DrawMode::Fill, rendered.area)?;
+                rendered_ents.rectangle(graphics::DrawMode::fill(), rendered.area, rendered.colour.into());
             }
         }
+
+        // Draw entities
+        let rendered_ents = rendered_ents.build(ctx)?;
+        graphics::draw(ctx, &rendered_ents, DrawParam::default())?;
 
         // Draw popup text
         self.draw_text_popups(ctx)?;
@@ -255,16 +244,15 @@ impl<'a, 'b> Galaga<'a, 'b> {
 
         // Draw score text
         for (e, score_text, pos) in (&ent, &score_text, &position).join() {
-            // We don't want to create a new TextCached every frame,
+            // We don't want to create a new Text every frame,
             // so we first look it up in the hashmap before just making a new one
             let text = self
                 .score_popup_texts
                 .entry(score_text.score)
-                .or_insert_with(|| TextCached::new(format!("{}", score_text.score)).unwrap());
+                .or_insert_with(|| Text::new(format!("{}", score_text.score)));
 
             // Draw the text
-            text.queue(ctx, [pos.x, pos.y].into(), Some((0x99, 0x99, 0x99).into()));
-            TextCached::draw_queued(ctx, graphics::DrawParam::default())?;
+            graphics::queue_text(ctx, &text, [pos.x, pos.y], Some((0x99, 0x99, 0x99).into()));
 
             // We only display the text for 60 frames,
             // remove it after that time
@@ -291,7 +279,7 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
             let score = self.world.read_resource::<PlayerScore>().0;
 
             // Run the systems!
-            self.dispatcher.dispatch(&self.world.res);
+            self.dispatcher.dispatch(&self.world);
 
             // Let any changes get reflected
             self.world.maintain();
@@ -307,7 +295,7 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
             if score != new_score {
                 self.ui_texts
                     .score
-                    .replace_fragment(0, format!("{:06}", new_score));
+                    .fragments_mut()[0] = TextFragment::new(format!("{:06}", new_score));
             }
 
             // Update "frame" count
@@ -321,7 +309,7 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
     /// Called after `update` to render game.
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         // Clear the old screen
-        graphics::clear(ctx);
+        graphics::clear(ctx, graphics::BLACK);
 
         // Draw all entities that should be rendered
         self.draw_entities(ctx)?;
@@ -329,46 +317,49 @@ impl<'a, 'b> event::EventHandler for Galaga<'a, 'b> {
         // Draw the UI
         self.draw_ui(ctx)?;
 
+        // Draw any queued text
+        graphics::draw_queued_text(ctx, DrawParam::default(), None, FilterMode::Linear)?;
+
         // Now, actually put everything onto the screen
-        graphics::present(ctx);
+        graphics::present(ctx)?;
 
         Ok(())
     }
 
     /// Respond to key down event
-    fn key_down_event(&mut self, ctx: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
+    fn key_down_event(&mut self, ctx: &mut Context, key: event::KeyCode, _: event::KeyMods, _: bool) {
         let mut input_state = self.world.write_resource::<InputState>();
 
         match key {
             // Quit on Escape
-            event::Keycode::Escape => ctx.quit().expect("Failed to exit somehow?"),
+            event::KeyCode::Escape => event::quit(ctx),
 
             // Fire a projectile
-            event::Keycode::Space => input_state.shoot = true,
+            event::KeyCode::Space => input_state.shoot = true,
 
             // Move in some direction
-            event::Keycode::W => input_state.up = true,
-            event::Keycode::A => input_state.left = true,
-            event::Keycode::S => input_state.down = true,
-            event::Keycode::D => input_state.right = true,
+            event::KeyCode::W => input_state.up = true,
+            event::KeyCode::A => input_state.left = true,
+            event::KeyCode::S => input_state.down = true,
+            event::KeyCode::D => input_state.right = true,
 
             _ => {}
         }
     }
 
     /// Respond to key up event
-    fn key_up_event(&mut self, _: &mut Context, key: event::Keycode, _: event::Mod, _: bool) {
+    fn key_up_event(&mut self, _: &mut Context, key: event::KeyCode, _: event::KeyMods) {
         let mut input_state = self.world.write_resource::<InputState>();
 
         match key {
             // Stop shooting
-            event::Keycode::Space => input_state.shoot = false,
+            event::KeyCode::Space => input_state.shoot = false,
 
             // Stop moving in some direction
-            event::Keycode::W => input_state.up = false,
-            event::Keycode::A => input_state.left = false,
-            event::Keycode::S => input_state.down = false,
-            event::Keycode::D => input_state.right = false,
+            event::KeyCode::W => input_state.up = false,
+            event::KeyCode::A => input_state.left = false,
+            event::KeyCode::S => input_state.down = false,
+            event::KeyCode::D => input_state.right = false,
 
             _ => {}
         }

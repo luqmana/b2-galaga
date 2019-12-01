@@ -5,15 +5,7 @@ version = "0.1.0"
 authors = ["Luqman Aden <me@luqman.ca>"]
 
 [dependencies]
-ggez = "0.4"
-rand = "0.5.5"
-specs = "0.12.3"
-specs-derive = "0.2.0"
-
-[dependencies.sdl2]
-version = "0.31.0"
-features = ["bundled", "static-link"]
-
-[patch.crates-io]
-# Temp override to upgrade nalgebra version
-ggez = { path = "../ggez" }
+ggez = "0.5"
+rand = "0.7"
+specs = "0.15"
+specs-derive = "0.4"

@@ -24,15 +24,15 @@ mod game;
 
 fn main() -> Result<(), GameError> {
     // Create a new ggez Context
-    let ctx = &mut ContextBuilder::new("Galaga", "Adcoba")
+    let (ctx, evt_loop) = &mut ContextBuilder::new("Galaga", "Adcoba")
         .window_setup(conf::WindowSetup::default().title("Galaga"))
         .window_mode(
             conf::WindowMode::default().dimensions(game::WINDOW_WIDTH, game::WINDOW_HEIGHT),
         ).build()?;
 
     // Create our main game state
-    let state = &mut game::Galaga::new(ctx)?;
+    let state = &mut game::Galaga::new();
 
     // Kick off the main loop
-    event::run(ctx, state)
+    event::run(ctx, evt_loop, state)
 }
